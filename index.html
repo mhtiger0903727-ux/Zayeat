@@ -1,0 +1,262 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ضایعات خشک</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&amp;display=swap');
+        * { box-sizing: border-box; }
+        body { font-family: 'Vazirmatn', Tahoma, sans-serif; margin: 0; background: #f4f6f7; color: #333; }
+        .header { background: linear-gradient(135deg, #2e7d32, #1b5e20); color: #fff; text-align: center; padding: 28px 16px; }
+        .header h1 { margin: 0; font-size: 1.7rem; }
+        .nav { background: #1b5e20; padding: 12px 8px; position: sticky; top: 0; z-index: 5; }
+        .nav-container { max-width: 1100px; margin: 0 auto; display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
+        .nav a { color: #fff; text-decoration: none; padding: 10px 18px; border-radius: 24px; background: rgba(255,255,255,.15); font-weight: 700; }
+        .nav a:hover { background: #4caf50; }
+        .page { max-width: 1000px; margin: 24px auto; padding: 24px; background: #fff; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,.08); display: none; }
+        .page.active { display: block; }
+        h2 { color: #1b5e20; margin-top: 0; }
+        .form { max-width: 460px; margin: 16px auto; }
+        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 10px; font-family: inherit; font-size: 1rem; }
+        button { font-family: inherit; cursor: pointer; border: none; border-radius: 24px; padding: 11px 22px; font-size: 1rem; }
+        .btn-green { background: #2e7d32; color: #fff; width: 100%; }
+        .btn-home { background: #2e7d32; color: #fff; }
+        .btn-back { background: #757575; color: #fff; }
+        .nav-buttons { margin-top: 28px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .msg { text-align: center; color: #1b5e20; font-weight: 700; }
+        .products { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+        .card { border: 1px solid #e0e0e0; border-radius: 14px; overflow: hidden; background: #fafafa; }
+        .card img { width: 100%; height: 180px; object-fit: cover; display: block; background: #eee; }
+        .card .body { padding: 12px 14px 16px; }
+        .price { color: #1b5e20; font-weight: 700; margin: 8px 0 0; }
+        .folder { border: 1px solid #c8e6c9; border-radius: 12px; margin: 10px 0; overflow: hidden; }
+        .folder-title { background: #e8f5e9; padding: 12px 14px; cursor: pointer; font-weight: 700; color: #1b5e20; }
+        .folder-body { display: none; padding: 12px 14px; }
+        .folder.open .folder-body { display: block; }
+        .admin-box { border-top: 2px solid #e8f5e9; margin-top: 24px; padding-top: 8px; }
+        .footer { background: #1b5e20; color: #fff; text-align: center; padding: 18px; margin-top: 20px; }
+        .phones p { font-size: 1.05rem; }
+    </style>
+</head>
+<body>
+    <div class="header"><h1>به سایت رسمی ضایعات خشک خوش آمدید</h1></div>
+    <div class="nav">
+        <div class="nav-container">
+            <a href="#" onclick="showPage('home');return false;">صفحه اصلی</a>
+            <a href="#" onclick="showPage('register');return false;">ثبت نام</a>
+            <a href="#" onclick="showPage('products');return false;">محصولات و قیمت ها</a>
+            <a href="#" onclick="showPage('contact');return false;">ارتباط با مدیران</a>
+            <a href="#" onclick="showPage('admin');return false;">پنل مدیریت</a>
+        </div>
+    </div>
+
+    <div id="home" class="page active">
+        <h2>صفحه اصلی</h2>
+        <p>به وب‌سایت رسمی ضایعات خشک خوش آمدید. برای فروش ضایعات، ابتدا ثبت‌نام کنید و سپس به صفحهٔ محصولات بروید.</p>
+    </div>
+
+    <div id="register" class="page">
+        <h2>ثبت نام</h2>
+        <form class="form" onsubmit="saveCustomer(event)">
+            <input id="firstName" type="text" placeholder="نام" required autocomplete="off">
+            <input id="lastName" type="text" placeholder="نام خانوادگی" required autocomplete="off">
+            <input id="phone" type="tel" placeholder="شماره تماس" required autocomplete="off">
+            <button class="btn-green" type="submit">ثبت نام</button>
+        </form>
+        <p id="regMsg" class="msg"></p>
+        <div class="nav-buttons">
+            <button class="btn-back" onclick="goBack()">بازگشت به صفحه قبل</button>
+            <button class="btn-home" onclick="showPage('home')">صفحه اصلی</button>
+        </div>
+    </div>
+
+    <div id="products" class="page">
+        <h2>محصولات و قیمت ها</h2>
+        <div id="productList" class="products"></div>
+        <p id="emptyProducts" class="msg">هنوز محصولی ثبت نشده است.</p>
+        <div class="nav-buttons">
+            <button class="btn-back" onclick="goBack()">بازگشت به صفحه قبل</button>
+            <button class="btn-home" onclick="showPage('home')">صفحه اصلی</button>
+        </div>
+    </div>
+
+    <div id="contact" class="page">
+        <h2>ارتباط با مدیران</h2>
+        <p>جهت کسب اطلاعات بیشتر با فروش ضایعات خشک خود با یکی از شماره های زیر تماس بگیرید</p>
+        <div class="phones">
+            <p>محمد حسین تقی پور : 09059115627</p>
+            <p>محمد هوشیار: 09014913700</p>
+        </div>
+        <div class="nav-buttons">
+            <button class="btn-back" onclick="goBack()">بازگشت به صفحه قبل</button>
+            <button class="btn-home" onclick="showPage('home')">صفحه اصلی</button>
+        </div>
+    </div>
+
+    <div id="admin" class="page">
+        <h2>پنل مدیریت</h2>
+        <div id="login-box">
+            <form class="form" onsubmit="loginAdmin(event)" autocomplete="off">
+                <input id="user" type="text" placeholder="نام کاربری" required autocomplete="off">
+                <input id="pass" type="password" placeholder="رمز عبور" required autocomplete="new-password">
+                <button class="btn-green" type="submit" style="background:#1b5e20;">ورود</button>
+            </form>
+            <p id="loginMsg" class="msg"></p>
+        </div>
+        <div id="admin-panel" style="display:none;">
+            <div class="admin-box">
+                <h3>افزودن محصول</h3>
+                <form class="form" onsubmit="addProduct(event)">
+                    <input id="pImage" type="file" accept="image/*" required>
+                    <textarea id="pCaption" rows="3" placeholder="متن توضیحات (زیر عکس)" required></textarea>
+                    <input id="pPrice" type="text" placeholder="قیمت" required>
+                    <button class="btn-green" type="submit">ثبت محصول در صفحه محصولات</button>
+                </form>
+                <p id="productMsg" class="msg"></p>
+            </div>
+            <div class="admin-box">
+                <h3>جستجوی مشتریان</h3>
+                <form class="form" onsubmit="searchCustomers(event)">
+                    <input id="searchQ" type="text" placeholder="شماره پرونده یا نام و نام خانوادگی">
+                    <button class="btn-green" type="submit">جستجو</button>
+                </form>
+                <div id="folders"></div>
+            </div>
+            <div class="nav-buttons">
+                <button class="btn-back" onclick="logout()">خروج از پنل</button>
+            </div>
+        </div>
+        <div class="nav-buttons">
+            <button class="btn-back" onclick="goBack()">بازگشت به صفحه قبل</button>
+            <button class="btn-home" onclick="showPage('home')">صفحه اصلی</button>
+        </div>
+    </div>
+
+    <div class="footer"><p>با مدیریت محمد حسین تقی پور و محمد هوشیار</p></div>
+
+    <script>
+        const historyStack = ['home'];
+        function esc(s) {
+            return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+        function load(key, fallback) {
+            try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch (e) { return fallback; }
+        }
+        function showPage(id) {
+            const cur = document.querySelector('.page.active');
+            if (cur && cur.id !== id) historyStack.push(cur.id);
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if (id === 'products') renderProducts();
+            if (id === 'admin' && sessionStorage.getItem('ok') === '1') openPanel();
+        }
+        function goBack() {
+            const prev = historyStack.pop() || 'home';
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(prev).classList.add('active');
+            if (prev === 'products') renderProducts();
+        }
+        function saveCustomer(e) {
+            e.preventDefault();
+            const first = document.getElementById('firstName').value.trim();
+            const last = document.getElementById('lastName').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const customers = load('customers', []);
+            let next = load('nextFile', 1405000);
+            const fileNo = next;
+            customers.push({ fileNo, first, last, phone, date: new Date().toLocaleString('fa-IR') });
+            localStorage.setItem('customers', JSON.stringify(customers));
+            localStorage.setItem('nextFile', JSON.stringify(next + 1));
+            document.getElementById('regMsg').textContent = 'ثبت نام با موفقیت انجام شد...برای فروش ضایعات وارد صفحه ی محصولات شوید. شماره پرونده شما: ' + fileNo;
+            e.target.reset();
+        }
+        function loginAdmin(e) {
+            e.preventDefault();
+            const u = document.getElementById('user').value;
+            const p = document.getElementById('pass').value;
+            if (u === 'mohammad' && p === 'th.zayeat') {
+                sessionStorage.setItem('ok', '1');
+                document.getElementById('user').value = '';
+                document.getElementById('pass').value = '';
+                document.getElementById('loginMsg').textContent = '';
+                openPanel();
+            } else {
+                document.getElementById('loginMsg').textContent = 'ورود انجام نشد.';
+                document.getElementById('loginMsg').style.color = '#b71c1c';
+            }
+        }
+        function openPanel() {
+            document.getElementById('login-box').style.display = 'none';
+            document.getElementById('admin-panel').style.display = 'block';
+            renderFolders(load('customers', []));
+        }
+        function logout() {
+            sessionStorage.removeItem('ok');
+            document.getElementById('admin-panel').style.display = 'none';
+            document.getElementById('login-box').style.display = 'block';
+        }
+        function folderHtml(list) {
+            if (!list.length) return '<p>موردی پیدا نشد.</p>';
+            return list.map((c, i) => `
+                <div class="folder" id="f-${i}">
+                    <div class="folder-title" onclick="document.getElementById('f-${i}').classList.toggle('open')">
+                        پرونده ${esc(c.fileNo)} — ${esc(c.first)} ${esc(c.last)}
+                    </div>
+                    <div class="folder-body">
+                        <p>شماره پرونده: ${esc(c.fileNo)}</p>
+                        <p>نام: ${esc(c.first)}</p>
+                        <p>نام خانوادگی: ${esc(c.last)}</p>
+                        <p>شماره تماس: ${esc(c.phone)}</p>
+                        <p>تاریخ ثبت: ${esc(c.date)}</p>
+                    </div>
+                </div>`).join('');
+        }
+        function renderFolders(list) { document.getElementById('folders').innerHTML = folderHtml(list); }
+        function searchCustomers(e) {
+            e.preventDefault();
+            const q = document.getElementById('searchQ').value.trim();
+            const all = load('customers', []);
+            if (!q) { renderFolders(all); return; }
+            const found = all.filter(c => String(c.fileNo) === q || (c.first + ' ' + c.last).includes(q) || c.first.includes(q) || c.last.includes(q));
+            renderFolders(found);
+        }
+        function addProduct(e) {
+            e.preventDefault();
+            const file = document.getElementById('pImage').files[0];
+            const caption = document.getElementById('pCaption').value.trim();
+            const price = document.getElementById('pPrice').value.trim();
+            const reader = new FileReader();
+            reader.onload = function () {
+                const products = load('products', []);
+                products.push({ image: reader.result, caption, price });
+                try {
+                    localStorage.setItem('products', JSON.stringify(products));
+                    document.getElementById('productMsg').style.color = '#1b5e20';
+                    document.getElementById('productMsg').textContent = 'محصول به صفحه محصولات اضافه شد.';
+                    e.target.reset();
+                } catch (err) {
+                    document.getElementById('productMsg').style.color = '#b71c1c';
+                    document.getElementById('productMsg').textContent = 'حجم عکس زیاد است. عکس کوچک‌تری انتخاب کنید.';
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+        function renderProducts() {
+            const products = load('products', []);
+            const box = document.getElementById('productList');
+            document.getElementById('emptyProducts').style.display = products.length ? 'none' : 'block';
+            box.innerHTML = products.map(p => `
+                <div class="card">
+                    <img src="${p.image}" alt="">
+                    <div class="body">
+                        <p>${esc(p.caption)}</p>
+                        <p class="price">قیمت: ${esc(p.price)}</p>
+                    </div>
+                </div>`).join('');
+        }
+        renderProducts();
+    </script>
+</body>
+</html>
+
