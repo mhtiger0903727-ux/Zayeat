@@ -12,8 +12,9 @@ body{font-family:'Vazirmatn',Tahoma,sans-serif;margin:0;background:#f4f6f7;color
 .header h1{margin:0;font-size:1.7rem}
 .nav{background:#1b5e20;padding:12px 8px;position:sticky;top:0;z-index:5}
 .nav-container{max-width:1100px;margin:0 auto;display:flex;justify-content:center;flex-wrap:wrap;gap:8px}
-.nav a,.chip{color:#fff;text-decoration:none;padding:10px 18px;border-radius:24px;background:rgba(255,255,255,.15);font-weight:700;border:none;font-family:inherit;cursor:pointer}
-.nav a:hover,.chip:hover{background:#4caf50}
+.nav a,.chip{color:#fff;text-decoration:none;padding:10px 18px;border-radius:24px;background:#2e7d32;font-weight:700;border:none;font-family:inherit;cursor:pointer}
+.chip:hover{background:#4caf50}
+.nav a:hover{background:#4caf50}
 .page{max-width:1000px;margin:24px auto;padding:24px;background:#fff;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.08);display:none}
 .page.active{display:block}
 h2{color:#1b5e20;margin-top:0}
@@ -32,7 +33,7 @@ button{font-family:inherit;cursor:pointer;border:none;border-radius:24px;padding
 .msg{text-align:center;color:#1b5e20;font-weight:700}
 .products{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
 .card{border:1px solid #e0e0e0;border-radius:14px;overflow:hidden;background:#fafafa}
-.card img{width:100%;height:180px;object-fit:cover;display:block;background:#eee}
+.card img,.thumb{width:100%;height:180px;object-fit:cover;display:block;background:#eee}
 .card .body{padding:12px 14px 16px}
 .price{color:#1b5e20;font-weight:700;margin:8px 0 0}
 .file-link{display:inline-block;margin-top:8px;color:#1565c0;font-weight:700}
@@ -43,9 +44,10 @@ button{font-family:inherit;cursor:pointer;border:none;border-radius:24px;padding
 .bar-wrap{height:18px;background:#e0e0e0;border-radius:10px;overflow:hidden;margin:10px 0}
 .bar{height:100%;width:0;background:#2e7d32}
 .manage-item{border:1px solid #e0e0e0;border-radius:12px;padding:14px;margin:10px 0}
+.thumb{width:140px;height:100px;border-radius:10px;margin-bottom:8px}
 .row-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .row-btns button{width:auto}
-.where{display:flex;gap:16px;margin:8px 0 12px}
+.where{display:flex;gap:16px;margin:8px 0 12px;flex-wrap:wrap}
 .where label{display:flex;gap:6px;align-items:center}
 .footer{background:#1b5e20;color:#fff;text-align:center;padding:18px;margin-top:20px}
 </style>
@@ -124,6 +126,7 @@ button{font-family:inherit;cursor:pointer;border:none;border-radius:24px;padding
   <h2>پنل مدیریت</h2>
   <div class="menu-row">
     <button class="chip" type="button" onclick="showPage('panelUpload')">آپلود فایل</button>
+    <button class="chip" type="button" onclick="showPage('panelGoods')">مدیریت محصولات</button>
     <button class="chip" type="button" onclick="showPage('panelPeople')">پنل مشتریان</button>
     <button class="chip" type="button" onclick="showPage('panelFiles')">مدیریت سایت</button>
     <button class="chip" type="button" onclick="logout()">خروج</button>
@@ -149,6 +152,13 @@ button{font-family:inherit;cursor:pointer;border:none;border-radius:24px;padding
   <div class="nav-buttons"><button class="btn-back" type="button" onclick="showPage('panelHome')">بازگشت به پنل</button></div>
 </div>
 
+<div id="panelGoods" class="page">
+  <h2>مدیریت محصولات</h2>
+  <p>محصولات صفحهٔ «محصولات و قیمت‌ها» را ویرایش یا حذف کنید.</p>
+  <div id="goodsList"></div>
+  <div class="nav-buttons"><button class="btn-back" type="button" onclick="showPage('panelHome')">بازگشت به پنل</button></div>
+</div>
+
 <div id="panelPeople" class="page">
   <h2>پنل مشتریان</h2>
   <form class="form" onsubmit="searchCustomers(event)">
@@ -161,7 +171,7 @@ button{font-family:inherit;cursor:pointer;border:none;border-radius:24px;padding
 
 <div id="panelFiles" class="page">
   <h2>مدیریت سایت</h2>
-  <p>فایل‌های آپلودشده را ویرایش یا حذف کنید.</p>
+  <p>همهٔ فایل‌های آپلودشده را ویرایش یا حذف کنید.</p>
   <div id="manageList"></div>
   <div class="nav-buttons"><button class="btn-back" type="button" onclick="showPage('panelHome')">بازگشت به پنل</button></div>
 </div>
@@ -171,7 +181,7 @@ button{font-family:inherit;cursor:pointer;border:none;border-radius:24px;padding
 <script>
 var historyStack = ['home'];
 var panelOn = false;
-var PANEL = ['panelLogin','panelHome','panelUpload','panelPeople','panelFiles'];
+var PANEL = ['panelLogin','panelHome','panelUpload','panelGoods','panelPeople','panelFiles'];
 
 function esc(s){
   return String(s==null?'':s).replace(/[&<>"']/g,function(c){
@@ -198,6 +208,7 @@ function showPage(id){
   renderPublic();
   if(id==='panelPeople') renderFolders(load('customers',[]));
   if(id==='panelFiles') renderManage();
+  if(id==='panelGoods') renderGoods();
 }
 function goBack(){
   var prev=historyStack.pop()||'home';
@@ -314,50 +325,65 @@ function addFile(e){
   reader.onerror=function(){ document.getElementById('productMsg').textContent='آپلود انجام نشد.'; };
   reader.readAsDataURL(file);
 }
-function renderManage(){
-  var all=files();
-  var box=document.getElementById('manageList');
-  if(!all.length){ box.innerHTML='<p>فایلی آپلود نشده است.</p>'; return; }
-  box.innerHTML=all.map(function(p){
-    return '<div class="manage-item">'+
-      '<strong>'+esc(p.name||'فایل')+'</strong>'+
-      '<p>محل: '+(p.where==='home'?'صفحه اصلی':'صفحه محصولات')+'</p>'+
-      '<p>'+esc(p.caption)+'</p>'+
-      (p.price?'<p>قیمت: '+esc(p.price)+'</p>':'')+
-      '<div class="row-btns">'+
-      '<button class="btn-edit" type="button" onclick="editFile('+p.id+')">ویرایش</button>'+
-      '<button class="btn-red" type="button" onclick="deleteFile('+p.id+')">حذف</button>'+
-      '</div>'+
-      '<form id="edit-'+p.id+'" class="form" style="display:none" onsubmit="saveEdit(event,'+p.id+')">'+
-      '<textarea id="cap-'+p.id+'" required>'+esc(p.caption)+'</textarea>'+
-      '<input id="price-'+p.id+'" value="'+esc(p.price)+'" placeholder="قیمت">'+
-      '<select id="where-'+p.id+'">'+
-      '<option value="home"'+(p.where==='home'?' selected':'')+'>صفحه اصلی</option>'+
-      '<option value="products"'+(p.where==='products'?' selected':'')+'>صفحه محصولات</option>'+
-      '</select>'+
-      '<button class="btn-green" type="submit">ذخیره ویرایش</button>'+
-      '</form></div>';
-  }).join('');
+function itemHtml(p, prefix){
+  var key=prefix+p.id;
+  var preview=/^data:image\//.test(p.data) ? '<img class="thumb" src="'+p.data+'" alt="">' : '<p>فایل: '+esc(p.name||'فایل')+'</p>';
+  return '<div class="manage-item">'+preview+
+    '<strong>'+esc(p.name||'فایل')+'</strong>'+
+    '<p>محل: '+(p.where==='home'?'صفحه اصلی':'صفحه محصولات')+'</p>'+
+    '<p>'+esc(p.caption)+'</p>'+
+    (p.price?'<p>قیمت: '+esc(p.price)+'</p>':'<p>قیمت ثبت نشده</p>')+
+    '<div class="row-btns">'+
+    '<button class="btn-edit" type="button" onclick="editFile(\''+key+'\')">ویرایش</button>'+
+    '<button class="btn-red" type="button" onclick="deleteFile('+p.id+')">حذف</button>'+
+    '</div>'+
+    '<form id="edit-'+key+'" class="form" style="display:none" onsubmit="saveEdit(event,'+p.id+',\''+prefix+'\')">'+
+    '<textarea id="cap-'+key+'" required>'+esc(p.caption)+'</textarea>'+
+    '<input id="price-'+key+'" value="'+esc(p.price)+'" placeholder="قیمت">'+
+    '<select id="where-'+key+'">'+
+    '<option value="products"'+(p.where==='products'?' selected':'')+'>صفحه محصولات</option>'+
+    '<option value="home"'+(p.where==='home'?' selected':'')+'>صفحه اصلی</option>'+
+    '</select>'+
+    '<button class="btn-green" type="submit">ذخیره ویرایش</button>'+
+    '</form></div>';
 }
-function editFile(id){
-  var f=document.getElementById('edit-'+id);
+function fillBox(boxId, list, prefix, emptyText){
+  var box=document.getElementById(boxId);
+  if(!list.length){ box.innerHTML='<p>'+emptyText+'</p>'; return; }
+  box.innerHTML=list.map(function(p){ return itemHtml(p, prefix); }).join('');
+}
+function renderManage(){
+  fillBox('manageList', files(), 'all-', 'فایلی آپلود نشده است.');
+}
+function renderGoods(){
+  fillBox('goodsList', files().filter(function(p){ return p.where==='products'; }), 'pro-', 'هنوز محصولی ثبت نشده است.');
+}
+function editFile(key){
+  var f=document.getElementById('edit-'+key);
+  if(!f) return;
   f.style.display=f.style.display==='none'?'block':'none';
 }
-function saveEdit(e,id){
+function saveEdit(e,id,prefix){
   e.preventDefault();
   var all=files();
   var item=null;
   for(var i=0;i<all.length;i++) if(all[i].id===id) item=all[i];
   if(!item) return;
-  item.caption=document.getElementById('cap-'+id).value.trim();
-  item.price=document.getElementById('price-'+id).value.trim();
-  item.where=document.getElementById('where-'+id).value;
-  saveFiles(all); renderManage(); renderPublic();
+  var key=prefix+id;
+  item.caption=document.getElementById('cap-'+key).value.trim();
+  item.price=document.getElementById('price-'+key).value.trim();
+  item.where=document.getElementById('where-'+key).value;
+  saveFiles(all);
+  renderManage();
+  renderGoods();
+  renderPublic();
 }
 function deleteFile(id){
-  if(!confirm('این فایل حذف شود؟')) return;
-  saveFiles(files().filter(function(x){return x.id!==id;}));
-  renderManage(); renderPublic();
+  if(!confirm('این مورد حذف شود؟')) return;
+  saveFiles(files().filter(function(x){ return x.id!==id; }));
+  renderManage();
+  renderGoods();
+  renderPublic();
 }
 renderPublic();
 </script>
