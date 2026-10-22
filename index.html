@@ -1,4 +1,4 @@
-<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -34,13 +34,21 @@
         .folder-title { background: #e8f5e9; padding: 12px 14px; cursor: pointer; font-weight: 700; color: #1b5e20; }
         .folder-body { display: none; padding: 12px 14px; }
         .folder.open .folder-body { display: block; }
-        .admin-box { border-top: 2px solid #e8f5e9; margin-top: 24px; padding-top: 8px; }
+        .admin-menu { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+        .admin-menu button { background: #e8f5e9; color: #1b5e20; padding: 10px 20px; }
+        .admin-menu button.active { background: #2e7d32; color: white; }
+        .admin-section { display: none; }
+        .admin-section.active { display: block; }
         .footer { background: #1b5e20; color: #fff; text-align: center; padding: 18px; margin-top: 20px; }
-        .phones p { font-size: 1.05rem; }
     </style>
 </head>
 <body>
-    <div class="header"><h1>به سایت رسمی ضایعات خشک خوش آمدید</h1></div>
+    <!-- هدر -->
+    <div class="header">
+        <h1>به سایت رسمی ضایعات خشک خوش آمدید</h1>
+    </div>
+
+    <!-- منو اصلی -->
     <div class="nav">
         <div class="nav-container">
             <a href="#" onclick="showPage('home');return false;">صفحه اصلی</a>
@@ -51,17 +59,19 @@
         </div>
     </div>
 
+    <!-- صفحه اصلی -->
     <div id="home" class="page active">
         <h2>صفحه اصلی</h2>
-        <p>به وب‌سایت رسمی ضایعات خشک خوش آمدید. برای فروش ضایعات، ابتدا ثبت‌نام کنید و سپس به صفحهٔ محصولات بروید.</p>
+        <p>به وب‌سایت رسمی ضایعات خشک خوش آمدید.</p>
     </div>
 
+    <!-- صفحه ثبت نام -->
     <div id="register" class="page">
         <h2>ثبت نام</h2>
         <form class="form" onsubmit="saveCustomer(event)">
-            <input id="firstName" type="text" placeholder="نام" required autocomplete="off">
-            <input id="lastName" type="text" placeholder="نام خانوادگی" required autocomplete="off">
-            <input id="phone" type="tel" placeholder="شماره تماس" required autocomplete="off">
+            <input id="firstName" type="text" placeholder="نام" required>
+            <input id="lastName" type="text" placeholder="نام خانوادگی" required>
+            <input id="phone" type="tel" placeholder="شماره تماس" required>
             <button class="btn-green" type="submit">ثبت نام</button>
         </form>
         <p id="regMsg" class="msg"></p>
@@ -71,6 +81,7 @@
         </div>
     </div>
 
+    <!-- صفحه محصولات (عمومی) -->
     <div id="products" class="page">
         <h2>محصولات و قیمت ها</h2>
         <div id="productList" class="products"></div>
@@ -81,6 +92,7 @@
         </div>
     </div>
 
+    <!-- صفحه ارتباط با مدیران -->
     <div id="contact" class="page">
         <h2>ارتباط با مدیران</h2>
         <p>جهت کسب اطلاعات بیشتر با فروش ضایعات خشک خود با یکی از شماره های زیر تماس بگیرید</p>
@@ -94,28 +106,41 @@
         </div>
     </div>
 
+    <!-- پنل مدیریت -->
     <div id="admin" class="page">
         <h2>پنل مدیریت</h2>
+
+        <!-- بخش ورود -->
         <div id="login-box">
             <form class="form" onsubmit="loginAdmin(event)" autocomplete="off">
-                <input id="user" type="text" placeholder="نام کاربری" required autocomplete="off">
-                <input id="pass" type="password" placeholder="رمز عبور" required autocomplete="new-password">
+                <input id="user" type="text" placeholder="نام کاربری" required>
+                <input id="pass" type="password" placeholder="رمز عبور" required>
                 <button class="btn-green" type="submit" style="background:#1b5e20;">ورود</button>
             </form>
             <p id="loginMsg" class="msg"></p>
         </div>
+
+        <!-- منوی پنل مدیریت (بعد از ورود) -->
         <div id="admin-panel" style="display:none;">
-            <div class="admin-box">
-                <h3>افزودن محصول</h3>
+            <div class="admin-menu">
+                <button onclick="showAdminSection('add-product')">افزودن محصول</button>
+                <button onclick="showAdminSection('customers')">مدیریت مشتریان</button>
+            </div>
+
+            <!-- بخش افزودن محصول -->
+            <div id="add-product" class="admin-section active">
+                <h3>افزودن محصول جدید</h3>
                 <form class="form" onsubmit="addProduct(event)">
                     <input id="pImage" type="file" accept="image/*" required>
-                    <textarea id="pCaption" rows="3" placeholder="متن توضیحات (زیر عکس)" required></textarea>
+                    <textarea id="pCaption" rows="3" placeholder="متن توضیحات (کپشن زیر عکس)" required></textarea>
                     <input id="pPrice" type="text" placeholder="قیمت" required>
-                    <button class="btn-green" type="submit">ثبت محصول در صفحه محصولات</button>
+                    <button class="btn-green" type="submit">ثبت محصول</button>
                 </form>
                 <p id="productMsg" class="msg"></p>
             </div>
-            <div class="admin-box">
+
+            <!-- بخش مشتریان -->
+            <div id="customers" class="admin-section">
                 <h3>جستجوی مشتریان</h3>
                 <form class="form" onsubmit="searchCustomers(event)">
                     <input id="searchQ" type="text" placeholder="شماره پرونده یا نام و نام خانوادگی">
@@ -123,140 +148,176 @@
                 </form>
                 <div id="folders"></div>
             </div>
+
             <div class="nav-buttons">
                 <button class="btn-back" onclick="logout()">خروج از پنل</button>
             </div>
         </div>
+
         <div class="nav-buttons">
             <button class="btn-back" onclick="goBack()">بازگشت به صفحه قبل</button>
             <button class="btn-home" onclick="showPage('home')">صفحه اصلی</button>
         </div>
     </div>
 
-    <div class="footer"><p>با مدیریت محمد حسین تقی پور و محمد هوشیار</p></div>
+    <div class="footer">
+        <p>با مدیریت محمد حسین تقی پور و محمد هوشیار</p>
+    </div>
 
     <script>
         const historyStack = ['home'];
-        function esc(s) {
-            return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-        }
-        function load(key, fallback) {
-            try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch (e) { return fallback; }
-        }
+
         function showPage(id) {
             const cur = document.querySelector('.page.active');
             if (cur && cur.id !== id) historyStack.push(cur.id);
+            
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(id).classList.add('active');
+
             if (id === 'products') renderProducts();
-            if (id === 'admin' && sessionStorage.getItem('ok') === '1') openPanel();
         }
+
         function goBack() {
             const prev = historyStack.pop() || 'home';
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(prev).classList.add('active');
             if (prev === 'products') renderProducts();
         }
+
         function saveCustomer(e) {
             e.preventDefault();
             const first = document.getElementById('firstName').value.trim();
             const last = document.getElementById('lastName').value.trim();
             const phone = document.getElementById('phone').value.trim();
-            const customers = load('customers', []);
-            let next = load('nextFile', 1405000);
+            const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+            let next = parseInt(localStorage.getItem('nextFile') || '1405000');
+            
             const fileNo = next;
             customers.push({ fileNo, first, last, phone, date: new Date().toLocaleString('fa-IR') });
+            
             localStorage.setItem('customers', JSON.stringify(customers));
-            localStorage.setItem('nextFile', JSON.stringify(next + 1));
-            document.getElementById('regMsg').textContent = 'ثبت نام با موفقیت انجام شد...برای فروش ضایعات وارد صفحه ی محصولات شوید. شماره پرونده شما: ' + fileNo;
+            localStorage.setItem('nextFile', next + 1);
+            
+            document.getElementById('regMsg').textContent = 
+                'ثبت نام با موفقیت انجام شد...برای فروش ضایعات وارد صفحه ی محصولات شوید. شماره پرونده شما: ' + fileNo;
             e.target.reset();
         }
+
         function loginAdmin(e) {
             e.preventDefault();
             const u = document.getElementById('user').value;
             const p = document.getElementById('pass').value;
+            
             if (u === 'mohammad' && p === 'th.zayeat') {
                 sessionStorage.setItem('ok', '1');
-                document.getElementById('user').value = '';
-                document.getElementById('pass').value = '';
-                document.getElementById('loginMsg').textContent = '';
-                openPanel();
+                document.getElementById('login-box').style.display = 'none';
+                document.getElementById('admin-panel').style.display = 'block';
+                showAdminSection('add-product');
             } else {
-                document.getElementById('loginMsg').textContent = 'ورود انجام نشد.';
-                document.getElementById('loginMsg').style.color = '#b71c1c';
+                document.getElementById('loginMsg').textContent = 'نام کاربری یا رمز عبور اشتباه است.';
             }
         }
-        function openPanel() {
-            document.getElementById('login-box').style.display = 'none';
-            document.getElementById('admin-panel').style.display = 'block';
-            renderFolders(load('customers', []));
+
+        function showAdminSection(section) {
+            document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(section).classList.add('active');
+            
+            if (section === 'customers') {
+                renderFolders(JSON.parse(localStorage.getItem('customers') || '[]'));
+            }
         }
+
         function logout() {
             sessionStorage.removeItem('ok');
             document.getElementById('admin-panel').style.display = 'none';
             document.getElementById('login-box').style.display = 'block';
+            document.getElementById('loginMsg').textContent = '';
         }
-        function folderHtml(list) {
-            if (!list.length) return '<p>موردی پیدا نشد.</p>';
-            return list.map((c, i) => `
-                <div class="folder" id="f-${i}">
-                    <div class="folder-title" onclick="document.getElementById('f-${i}').classList.toggle('open')">
-                        پرونده ${esc(c.fileNo)} — ${esc(c.first)} ${esc(c.last)}
-                    </div>
-                    <div class="folder-body">
-                        <p>شماره پرونده: ${esc(c.fileNo)}</p>
-                        <p>نام: ${esc(c.first)}</p>
-                        <p>نام خانوادگی: ${esc(c.last)}</p>
-                        <p>شماره تماس: ${esc(c.phone)}</p>
-                        <p>تاریخ ثبت: ${esc(c.date)}</p>
-                    </div>
-                </div>`).join('');
-        }
-        function renderFolders(list) { document.getElementById('folders').innerHTML = folderHtml(list); }
-        function searchCustomers(e) {
-            e.preventDefault();
-            const q = document.getElementById('searchQ').value.trim();
-            const all = load('customers', []);
-            if (!q) { renderFolders(all); return; }
-            const found = all.filter(c => String(c.fileNo) === q || (c.first + ' ' + c.last).includes(q) || c.first.includes(q) || c.last.includes(q));
-            renderFolders(found);
-        }
+
         function addProduct(e) {
             e.preventDefault();
             const file = document.getElementById('pImage').files[0];
             const caption = document.getElementById('pCaption').value.trim();
             const price = document.getElementById('pPrice').value.trim();
+
             const reader = new FileReader();
-            reader.onload = function () {
-                const products = load('products', []);
-                products.push({ image: reader.result, caption, price });
-                try {
-                    localStorage.setItem('products', JSON.stringify(products));
-                    document.getElementById('productMsg').style.color = '#1b5e20';
-                    document.getElementById('productMsg').textContent = 'محصول به صفحه محصولات اضافه شد.';
-                    e.target.reset();
-                } catch (err) {
-                    document.getElementById('productMsg').style.color = '#b71c1c';
-                    document.getElementById('productMsg').textContent = 'حجم عکس زیاد است. عکس کوچک‌تری انتخاب کنید.';
-                }
+            reader.onload = function(ev) {
+                const products = JSON.parse(localStorage.getItem('products') || '[]');
+                products.push({
+                    image: ev.target.result,
+                    caption: caption,
+                    price: price
+                });
+                localStorage.setItem('products', JSON.stringify(products));
+                document.getElementById('productMsg').textContent = 'محصول با موفقیت اضافه شد.';
+                e.target.reset();
             };
             reader.readAsDataURL(file);
         }
+
         function renderProducts() {
-            const products = load('products', []);
+            const products = JSON.parse(localStorage.getItem('products') || '[]');
             const box = document.getElementById('productList');
-            document.getElementById('emptyProducts').style.display = products.length ? 'none' : 'block';
-            box.innerHTML = products.map(p => `
-                <div class="card">
-                    <img src="${p.image}" alt="">
-                    <div class="body">
-                        <p>${esc(p.caption)}</p>
-                        <p class="price">قیمت: ${esc(p.price)}</p>
+            const empty = document.getElementById('emptyProducts');
+            
+            if (products.length === 0) {
+                empty.style.display = 'block';
+                box.innerHTML = '';
+            } else {
+                empty.style.display = 'none';
+                box.innerHTML = products.map(p => `
+                    <div class="card">
+                        <img src="${p.image}" alt="">
+                        <div class="body">
+                            <p>${p.caption}</p>
+                            <p class="price">قیمت: ${p.price}</p>
+                        </div>
                     </div>
-                </div>`).join('');
+                `).join('');
+            }
         }
-        renderProducts();
+
+        function renderFolders(list) {
+            const container = document.getElementById('folders');
+            if (!list.length) {
+                container.innerHTML = '<p>موردی پیدا نشد.</p>';
+                return;
+            }
+            container.innerHTML = list.map((c, i) => `
+                <div class="folder" id="f-${i}">
+                    <div class="folder-title" onclick="document.getElementById('f-${i}').classList.toggle('open')">
+                        پرونده ${c.fileNo} — ${c.first} ${c.last}
+                    </div>
+                    <div class="folder-body">
+                        <p>شماره پرونده: ${c.fileNo}</p>
+                        <p>نام: ${c.first}</p>
+                        <p>نام خانوادگی: ${c.last}</p>
+                        <p>شماره تماس: ${c.phone}</p>
+                        <p>تاریخ ثبت: ${c.date}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function searchCustomers(e) {
+            e.preventDefault();
+            const q = document.getElementById('searchQ').value.trim();
+            const all = JSON.parse(localStorage.getItem('customers') || '[]');
+            if (!q) {
+                renderFolders(all);
+                return;
+            }
+            const found = all.filter(c => 
+                String(c.fileNo) === q || 
+                (c.first + ' ' + c.last).includes(q)
+            );
+            renderFolders(found);
+        }
+
+        // نمایش اولیه محصولات
+        window.onload = function() {
+            renderProducts();
+        }
     </script>
 </body>
 </html>
-
