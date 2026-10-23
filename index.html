@@ -33,7 +33,13 @@ button{font-family:inherit;cursor:pointer;border:none;border-radius:24px;padding
 .msg{text-align:center;color:#1b5e20;font-weight:700}
 .products{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
 .card{border:1px solid #e0e0e0;border-radius:14px;overflow:hidden;background:#fafafa}
-.card img,.thumb{width:100%;height:180px;object-fit:cover;display:block;background:#eee}
+.card img {
+  width: 100%;
+  height: auto;
+  display: block;
+  max-height: 700px; /* حداکثر ارتفاع برای جلوگیری از خیلی بزرگ شدن */
+  object-fit: contain;
+}
 .card .body{padding:12px 14px 16px}
 .price{color:#1b5e20;font-weight:700;margin:8px 0 0}
 .file-link{display:inline-block;margin-top:8px;color:#1565c0;font-weight:700}
@@ -262,7 +268,7 @@ function folderHtml(list){
   if(!list.length) return '<p>موردی پیدا نشد.</p>';
   return list.map(function(c,i){
     return '<div class="folder" id="f-'+i+'">'+
-      '<div class="folder-title" onclick="document.getElementById(\'f-'+i+'\').classList.toggle(\'open\')">پرونده '+esc(c.fileNo)+' — '+esc(c.first)+' '+esc(c.last)+'</div>'+
+      '<div class="folder-title" onclick="document.getElementById(\'f-'+i+'\').classList.toggle(\'open\')">پرونده '+esc(c.fileNo)+' -- '+esc(c.first)+' '+esc(c.last)+'</div>'+
       '<div class="folder-body">'+
       '<p>شماره پرونده: '+esc(c.fileNo)+'</p>'+
       '<p>نام: '+esc(c.first)+'</p>'+
@@ -284,10 +290,26 @@ function searchCustomers(e){
   }));
 }
 function cardHtml(p){
-  var media=/^data:image\//.test(p.data)
-    ? '<img src="'+p.data+'" alt="">'
-    : '<div class="body"><a class="file-link" href="'+p.data+'" download="'+esc(p.name)+'">دانلود: '+esc(p.name||'فایل')+'</a></div>';
-  return '<div class="card">'+media+'<div class="body"><p>'+esc(p.caption)+'</p>'+(p.price?'<p class="price">قیمت: '+esc(p.price)+'</p>':'')+'</div></div>';
+  var data = p.data;
+  var media = '';
+
+  if (/^data:image\//.test(data)) {
+    media = '<img src="'+data+'" alt="">';
+  } 
+  else if (/^data:audio\//.test(data)) {
+    media = '<audio controls style="width:100%;margin:8px 0"><source src="'+data+'"></audio>';
+  } 
+  else if (/^data:video\//.test(data)) {
+    media = '<video controls style="width:100%;margin:8px 0"><source src="'+data+'"></video>';
+  } 
+  else {
+    media = '<div class="body"><a class="file-link" href="'+data+'" download="'+esc(p.name)+'">دانلود: '+esc(p.name||'فایل')+'</a></div>';
+  }
+
+  return '<div class="card">'+media+
+    '<div class="body"><p>'+esc(p.caption)+'</p>'+
+    (p.price ? '<p class="price">قیمت: '+esc(p.price)+'</p>' : '')+
+    '</div></div>';
 }
 function renderPublic(){
   var all=files();
