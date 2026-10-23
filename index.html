@@ -76,6 +76,7 @@ button{font-family:inherit;cursor:pointer;border:none;border-radius:24px;padding
     <input id="firstName" placeholder="نام" required autocomplete="off">
     <input id="lastName" placeholder="نام خانوادگی" required autocomplete="off">
     <input id="phone" type="tel" placeholder="شماره تماس" required autocomplete="off">
+    <input id="address" placeholder="آدرس" required autocomplete="off">
     <button class="btn-green" type="submit">ثبت نام</button>
   </form>
   <p id="regMsg" class="msg"></p>
@@ -248,9 +249,10 @@ function saveCustomer(e){
   var first=document.getElementById('firstName').value.trim();
   var last=document.getElementById('lastName').value.trim();
   var phone=document.getElementById('phone').value.trim();
+  var address=document.getElementById('address').value.trim();
   var customers=load('customers',[]);
   var next=load('nextFile',1405000);
-  customers.push({fileNo:next,first:first,last:last,phone:phone,date:new Date().toLocaleString('fa-IR')});
+  customers.push({fileNo:next,first:first,last:last,phone:phone,address:address,date:new Date().toLocaleString('fa-IR')});
   localStorage.setItem('customers',JSON.stringify(customers));
   localStorage.setItem('nextFile',JSON.stringify(next+1));
   document.getElementById('regMsg').textContent='ثبت نام با موفقیت انجام شد...برای فروش ضایعات وارد صفحه ی محصولات شوید. شماره پرونده شما: '+next;
@@ -266,6 +268,7 @@ function folderHtml(list){
       '<p>نام: '+esc(c.first)+'</p>'+
       '<p>نام خانوادگی: '+esc(c.last)+'</p>'+
       '<p>شماره تماس: '+esc(c.phone)+'</p>'+
+      '<p>آدرس: '+esc(c.address)+'</p>'+
       '<p>تاریخ ثبت: '+esc(c.date)+'</p>'+
       '</div></div>';
   }).join('');
