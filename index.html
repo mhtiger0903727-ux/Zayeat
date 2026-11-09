@@ -87,7 +87,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SUPABASE_URL='https://bgmdwxksoiupjaounndm.supabase.co';
 const SUPABASE_KEY='sb_publishable_yVdCyd9j9IAKfxm9yjeUjg_WX-ZHoBJ';
 const sb=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false,flowType:'pkce',storage:window.sessionStorage}});
-startSiteFilesRealtime();
 const $=id=>document.getElementById(id);let historyStack=['home'];let currentUser=null;let currentRole=null;let currentUsername='';let cachedFiles=[];
 const panelIds=['panelLogin','panelInviteAccept','panelHome','panelUpload','panelGoods','panelPeople','panelFiles','panelAdmins','panelPassword'];
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -107,6 +106,7 @@ function startSiteFilesRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'site_files'},()=>{renderPublic();})
     .subscribe();
 }
+startSiteFilesRealtime();
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)renderPublic();});
 window.addEventListener('pageshow',()=>{renderPublic();});
 async function publicFiles(){const {data,error}=await sb.from('site_files').select('*').eq('is_published',true).order('created_at',{ascending:false});if(error)throw error;cachedFiles=data||[];return cachedFiles;}
