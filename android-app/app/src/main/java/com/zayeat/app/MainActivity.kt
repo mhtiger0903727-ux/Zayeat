@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.webkit.GeolocationPermissions
 import android.webkit.ValueCallback
@@ -17,7 +18,7 @@ import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
-import androidx.core.app.ActivityCompat
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 
@@ -28,10 +29,17 @@ class MainActivity : ComponentActivity() {
     private var geoCallback: GeolocationPermissions.Callback? = null
     private var geoOrigin: String? = null
 
+    private val locationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
+            val granted = result.values.any { it }
+            geoCallback?.invoke(geoOrigin, granted, false)
+            geoCallback = null
+            geoOrigin = null
+        }
+
     companion object {
         private const val SITE_URL = "https://mhtiger0903727-ux.github.io/Zayeat/"
         private const val FILE_CHOOSER_REQUEST = 4102
-        private const val LOCATION_REQUEST = 4103
         private const val SITE_HOST = "mhtiger0903727-ux.github.io"
     }
 
@@ -49,9 +57,9 @@ class MainActivity : ComponentActivity() {
         webView = WebView(this)
         refreshLayout.addView(
             webView,
-            SwipeRefreshLayout.LayoutParams(
-                SwipeRefreshLayout.LayoutParams.MATCH_PARENT,
-                SwipeRefreshLayout.LayoutParams.MATCH_PARENT
+            ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
             )
         )
         setContentView(refreshLayout)
@@ -60,7 +68,7 @@ class MainActivity : ComponentActivity() {
             javaScriptEnabled = true
             domStorageEnabled = true
             databaseEnabled = true
-            geolocationEnabled = true
+            setGeolocationEnabled(true)
             allowFileAccess = true
             allowContentAccess = true
             javaScriptCanOpenWindowsAutomatically = false
@@ -71,7 +79,6 @@ class MainActivity : ComponentActivity() {
             displayZoomControls = false
         }
 
-        // Keep the website's secure session cookies available inside the app.
         CookieManager.getInstance().setAcceptCookie(true)
 
         refreshLayout.setOnRefreshListener {
@@ -171,13 +178,11 @@ class MainActivity : ComponentActivity() {
                 } else {
                     geoOrigin = origin
                     geoCallback = callback
-                    ActivityCompat.requestPermissions(
-                        this@MainActivity,
+                    locationPermissionLauncher.launch(
                         arrayOf(
                             Manifest.permission.ACCESS_FINE_LOCATION,
                             Manifest.permission.ACCESS_COARSE_LOCATION
-                        ),
-                        LOCATION_REQUEST
+                        )
                     )
                 }
             }
@@ -205,20 +210,6 @@ class MainActivity : ComponentActivity() {
             } else null
             filePathCallback?.onReceiveValue(result)
             filePathCallback = null
-        }
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == LOCATION_REQUEST) {
-            val granted = grantResults.any { it == PackageManager.PERMISSION_GRANTED }
-            geoCallback?.invoke(geoOrigin, granted, false)
-            geoCallback = null
-            geoOrigin = null
         }
     }
 
