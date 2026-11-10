@@ -243,3 +243,6 @@ button:hover{transform:translateY(-1px);box-shadow:0 7px 16px #123b201c}
   animation:none!important;
   background-position:0 0!important;
 }
+
+/* Emergency access fix: never let the intro overlay block the website. */
+#zayeatSplash{display:none!important;visibility:hidden!important;pointer-events:none!important}
