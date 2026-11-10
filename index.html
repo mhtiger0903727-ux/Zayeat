@@ -301,7 +301,7 @@ $('passwordForm').addEventListener('submit',async e=>{e.preventDefault();const {
  };
  const apply=root=>{
   const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
-  let n; while((n=walker.nextNode())) n.nodeValue=convert(n.nodeValue);
+  let n; while((n=walker.nextNode())) { const next=convert(n.nodeValue); if(next!==n.nodeValue) n.nodeValue=next; }
   root.querySelectorAll?.('[title],[aria-label],[placeholder],[alt]').forEach(el=>{
    for(const a of ['title','aria-label','placeholder','alt']){
     const v=el.getAttribute(a); if(v) el.setAttribute(a,convert(v));
@@ -312,7 +312,7 @@ $('passwordForm').addEventListener('submit',async e=>{e.preventDefault();const {
  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',run,{once:true}); else run();
  new MutationObserver(ms=>ms.forEach(m=>{
   m.addedNodes.forEach(n=>{if(n.nodeType===Node.TEXT_NODE)n.nodeValue=convert(n.nodeValue);else if(n.nodeType===Node.ELEMENT_NODE)apply(n);});
-  if(m.type==='characterData')m.target.nodeValue=convert(m.target.nodeValue);
+  if(m.type==='characterData'){const next=convert(m.target.nodeValue);if(next!==m.target.nodeValue)m.target.nodeValue=next;}
  })).observe(document.documentElement,{subtree:true,childList:true,characterData:true});
 })();
 </script>
