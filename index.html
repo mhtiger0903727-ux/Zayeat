@@ -291,13 +291,13 @@ $('passwordForm').addEventListener('submit',async e=>{e.preventDefault();const {
 /* واژه‌گذاری متناسب با محیط اجرا: برنامه در اپ، وب‌سایت در مرورگر */
 (function(){
  const ua=navigator.userAgent||'';
- const isApp=/(;\\s*wv\\)|\\bZayeatApp\\b|ZayeatAndroidWebView)/i.test(ua) || !!(window.AndroidAppBridge||window.ZayeatApp);
+ const isApp=/(;\s*wv\)|\bZayeatApp\b|ZayeatAndroidWebView)/i.test(ua) || !!(window.AndroidAppBridge||window.ZayeatApp);
  const appWord='برنامه', webWord='وب‌سایت';
  const convert=s=>{
   if(!s || !/(سایت|وب.?سایت|برنامه)/.test(s)) return s;
   return isApp
-   ? s.replace(/وب[\\u200c ]?سایت|وبسایت|سایت/g,appWord)
-   : s.replace(/وب[\\u200c ]?سایت|وبسایت/g,webWord).replace(/\\bبرنامه\\b/g,webWord);
+   ? s.replace(/وب[\u200c ]?سایت|وبسایت|سایت/g,appWord)
+   : s.replace(/وب[\\u200c ]?سایت|وبسایت/g,webWord).replace(/\bبرنامه\b/g,webWord);
  };
  const apply=root=>{
   const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
