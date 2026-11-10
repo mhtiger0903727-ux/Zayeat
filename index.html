@@ -224,8 +224,12 @@ $('passwordForm').addEventListener('submit',async e=>{e.preventDefault();const {
  const finish=()=>{
   if(splashFinished)return;
   splashFinished=true;
-  splash?.classList.add('done');
-  setTimeout(()=>splash?.remove(),700);
+  if(splash){
+   splash.style.setProperty('display','none','important');
+   splash.style.setProperty('visibility','hidden','important');
+   splash.style.setProperty('pointer-events','none','important');
+   splash.remove();
+  }
   if(!document.querySelector('.page.active'))document.getElementById('home')?.classList.add('active');
  };
  splash?.querySelector('.splash-skip')?.addEventListener('click',finish);
