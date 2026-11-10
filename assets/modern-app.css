@@ -237,3 +237,9 @@ button:hover{transform:translateY(-1px);box-shadow:0 7px 16px #123b201c}
   100%{opacity:0;transform:translate3d(-50%,17vh,0) scale(2.15);filter:blur(1.5px) drop-shadow(0 17px 15px #0005)}
 }
 @media(max-width:640px){#zayeatSplash img.z-vector-truck{width:min(52vw,270px)!important;max-width:52vw!important}}
+
+/* Fix: keep the road lane markings anchored to the road, not moving with the truck */
+#zayeatSplash .splash-road:before{
+  animation:none!important;
+  background-position:0 0!important;
+}
