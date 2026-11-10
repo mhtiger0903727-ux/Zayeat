@@ -46,11 +46,11 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.statusBarColor = android.graphics.Color.rgb(27, 94, 32)
-        window.navigationBarColor = android.graphics.Color.rgb(18, 63, 24)
+        window.statusBarColor = android.graphics.Color.rgb(16, 76, 43)
+        window.navigationBarColor = android.graphics.Color.rgb(12, 54, 30)
 
         refreshLayout = SwipeRefreshLayout(this).apply {
-            setColorSchemeColors(android.graphics.Color.rgb(46, 125, 50))
+            setColorSchemeColors(android.graphics.Color.rgb(35, 133, 74))
             setProgressBackgroundColorSchemeColor(android.graphics.Color.WHITE)
         }
 
