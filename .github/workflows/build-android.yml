@@ -1,4 +1,5 @@
 name: Build Zayeat Android APK
+# Triggered build requested for downloadable debug APK.
 
 on:
   push:
