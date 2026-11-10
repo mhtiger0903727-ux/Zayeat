@@ -233,6 +233,14 @@ $('passwordForm').addEventListener('submit',async e=>{e.preventDefault();const {
   window.enterPanel=()=>window.showPage('panelLogin');
  }
  const splash=$('zayeatSplash');
+ const dock=$('zayeatDock');
+ // Bind navigation before optional decorative enhancements so a visual script error cannot disable the site.
+ dock?.addEventListener('click',e=>{
+  const button=e.target.closest('button[data-page]');
+  if(!button)return;
+  window.showPage?.(button.dataset.page);
+  dock.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===button));
+ });
  let splashFinished=false;
  const finish=()=>{
   if(splashFinished)return;
@@ -251,8 +259,7 @@ $('passwordForm').addEventListener('submit',async e=>{e.preventDefault();const {
  splashTruck?.addEventListener('error',finish,{once:true});
  setTimeout(finish,4000);
  window.addEventListener('load',()=>setTimeout(finish,4000),{once:true});
- const dock=$('zayeatDock');
- dock?.querySelectorAll('button[data-page]').forEach(b=>b.addEventListener('click',()=>{window.showPage?.(b.dataset.page);dock.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));}));
+
  const home=$('home');
  if(home&&!$('zayeatWelcome')){
   const hero=document.createElement('section');hero.id='zayeatWelcome';hero.innerHTML='<div class="welcome-copy"><h2>ضایعاتت رو به ارزش تبدیل کن</h2><p>ثبت درخواست، مشاهده قیمت‌ها و ارتباط آسان با مجموعه ضایعات خشک</p><div class="welcome-actions"><button type="button" id="zQuickRegister">ثبت درخواست</button><button type="button" class="secondary" id="zQuickProducts">مشاهده قیمت‌ها</button></div></div><svg class="welcome-art z-vector-truck" viewBox="0 0 520 430" role="img" aria-label="تصویرسازی وانت بازیافت در حال حرکت"><defs><linearGradient id="vanBody" x2="0" y2="1"><stop stop-color="#f5f1df"/><stop offset="1" stop-color="#8e9b8b"/></linearGradient><linearGradient id="vanGlass" x2="0" y2="1"><stop stop-color="#b9d7d9"/><stop offset="1" stop-color="#42666a"/></linearGradient><linearGradient id="vanRoadGlow" x2="0" y2="1"><stop stop-color="#f4d67c"/><stop offset="1" stop-color="#d88c37"/></linearGradient></defs><ellipse cx="260" cy="397" rx="188" ry="20" fill="#07170e" opacity=".32"/><g stroke="#26352d" stroke-linejoin="round"><path d="M112 155 144 65 190 29 324 29 370 68 406 160 387 194 128 194Z" fill="#70533a" stroke-width="8"/><path d="m143 91 47-53 134 0 40 53-29 39H166Z" fill="#a87845" stroke-width="5"/><path d="m164 95 35-44h111l33 44-25 24H185Z" fill="#c79b63" stroke-width="4"/><path d="m181 73 22-22h99l19 22Z" fill="#e0c39a" stroke-width="3"/><path d="m125 140 38-39 22 20-33 49Z" fill="#d5d0c2"/><path d="m340 119 29-22 28 42-32 34Z" fill="#d5d0c2"/><path d="m174 132 169-1 33 36-214 0Z" fill="#65472f"/><path d="M91 178 429 178 462 251 445 341 75 341 58 251Z" fill="url(#vanBody)" stroke-width="9"/><path d="m112 190 296 0 31 58H81Z" fill="url(#vanGlass)" stroke-width="7"/><path d="M258 190v58" fill="none" stroke="#334c4a" stroke-width="7"/><path d="m80 258 360 0-15 69H94Z" fill="#78857b" stroke-width="6"/><path d="m72 270 376 0-9 34H81Z" fill="#35433b" stroke-width="5"/><path d="M90 281h52l-5 20H93Z" fill="#f5d98d" stroke-width="3"/><path d="m378 281 52-1-4 21h-51Z" fill="#f5d98d" stroke-width="3"/><path d="m183 307 154 0-10 27H193Z" fill="#202c27" stroke-width="4"/><path d="M65 237 455 237" stroke="#dce2d6" stroke-width="5"/><path d="M105 333 416 333" stroke="#26352d" stroke-width="8"/><path d="M97 343h52v24H97zM371 343h52v24h-52z" fill="#202722" stroke-width="6"/><path d="M170 344h180" stroke="#d5dfd2" stroke-width="5"/></g><g fill="#17231d" stroke="#090f0b" stroke-width="7"><ellipse cx="111" cy="347" rx="35" ry="65"/><ellipse cx="409" cy="347" rx="35" ry="65"/></g><g fill="#9ba59a" stroke="#303b34" stroke-width="6"><ellipse cx="111" cy="350" rx="15" ry="35"/><ellipse cx="409" cy="350" rx="15" ry="35"/></g><path d="M223 252h74" stroke="#e4e9dc" stroke-width="6" stroke-linecap="round"/><path d="M241 285h38" stroke="#27372e" stroke-width="5" stroke-linecap="round"/></svg>';
