@@ -217,3 +217,23 @@ button:hover{transform:translateY(-1px);box-shadow:0 7px 16px #123b201c}
 @media(prefers-reduced-motion:reduce){
  #zayeatSplash img.z-vector-truck{animation:none!important;opacity:1;transform:translate3d(-50%,0,0) scale(.6)}
 }
+
+/* Refined splash: blend away the white studio backdrop, enlarge the pickup, and ease its approach */
+#zayeatSplash img.z-vector-truck{
+  width:min(43vw,330px)!important;
+  max-width:43vw!important;
+  mix-blend-mode:multiply!important;
+  animation:truckHeadOnLane 6.2s cubic-bezier(.18,.72,.22,1) both!important;
+  will-change:transform,opacity,filter;
+}
+@keyframes truckHeadOnLane{
+  0%{opacity:0;transform:translate3d(-50%,-38vh,0) scale(.055);filter:blur(1.1px) drop-shadow(0 1px 2px #0004)}
+  12%{opacity:1;transform:translate3d(-50%,-34vh,0) scale(.085);filter:blur(.65px) drop-shadow(0 2px 3px #0005)}
+  32%{opacity:1;transform:translate3d(-50%,-25vh,0) scale(.21);filter:blur(.25px) drop-shadow(0 4px 5px #0006)}
+  55%{opacity:1;transform:translate3d(-50%,-13vh,0) scale(.47);filter:blur(0) drop-shadow(0 7px 8px #0007)}
+  74%{opacity:1;transform:translate3d(-50%,-2vh,0) scale(.82);filter:blur(0) drop-shadow(0 10px 11px #0008)}
+  87%{opacity:1;transform:translate3d(-50%,4vh,0) scale(1.18);filter:blur(.08px) drop-shadow(0 13px 13px #0008)}
+  95%{opacity:.78;transform:translate3d(-50%,10vh,0) scale(1.62);filter:blur(.55px) drop-shadow(0 15px 14px #0007)}
+  100%{opacity:0;transform:translate3d(-50%,17vh,0) scale(2.15);filter:blur(1.5px) drop-shadow(0 17px 15px #0005)}
+}
+@media(max-width:640px){#zayeatSplash img.z-vector-truck{width:min(52vw,270px)!important;max-width:52vw!important}}
