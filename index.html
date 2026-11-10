@@ -165,4 +165,49 @@ $('adminProfileForm').addEventListener('submit',async e=>{e.preventDefault();if(
 async function loadAdmins(){const box=$('adminsList');box.innerHTML='<p>در حال دریافت...</p>';try{const {data,error}=await sb.from('admin_users').select('user_id,username,role,created_at').order('created_at');if(error)throw error;box.innerHTML=(data||[]).map(a=>`<div class="manage-item"><b>${esc(a.username)}</b> — ${a.role==='owner'?'مدیر اصلی':'مدیر'}${a.role==='admin'?`<div class="row-btns"><button class="btn-red" data-remove-admin="${a.user_id}">لغو دسترسی</button></div>`:''}</div>`).join('')||'<p>مدیری ثبت نشده است.</p>';box.querySelectorAll('[data-remove-admin]').forEach(b=>b.onclick=async()=>{if(!confirm('دسترسی این مدیر لغو شود؟'))return;const {error}=await sb.rpc('remove_site_admin',{p_user_id:b.dataset.removeAdmin});if(error)alert(errText(error));else loadAdmins();});}catch(e){box.innerHTML=`<p class="msg error">${esc(errText(e))}</p>`;}}
 $('passwordForm').addEventListener('submit',async e=>{e.preventDefault();const {error}=await sb.auth.updateUser({password:$('newPassword').value});if(error)message('passwordMsg',errText(error),true);else{message('passwordMsg','رمز عبور با موفقیت تغییر کرد.');e.target.reset();}});
 </script>
+<div id="zayeatSplash" aria-label="شروع ضایعات خشک"><div class="splash-brand">ضایعات خشک<div class="splash-sub">بازیافت هوشمند، آینده‌ای پاک‌تر</div></div><div class="splash-road"></div><img src="./assets/zayeat-truck.webp" alt="وانت ضایعات خشک"><button class="splash-skip" type="button">ورود به برنامه</button></div>
+<nav id="zayeatDock" aria-label="دسترسی سریع">
+<button data-page="home" class="active"><span>⌂</span>خانه</button>
+<button data-page="products"><span>♻</span>قیمت‌ها</button>
+<button data-page="register"><span>＋</span>ثبت‌نام</button>
+<button data-page="contact"><span>☎</span>تماس</button>
+<button data-page="panelLogin"><span>♙</span>مدیریت</button>
+</nav>
+<script>
+(()=> {
+ const $=id=>document.getElementById(id);
+ const splash=$('zayeatSplash');
+ const finish=()=>{splash?.classList.add('done');setTimeout(()=>splash?.remove(),800)};
+ splash?.querySelector('.splash-skip')?.addEventListener('click',finish);
+ setTimeout(finish,3900);
+ const dock=$('zayeatDock');
+ dock?.querySelectorAll('button[data-page]').forEach(b=>b.addEventListener('click',()=>{window.showPage?.(b.dataset.page);dock.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));}));
+ const home=$('home');
+ if(home&&!$('zayeatWelcome')){
+  const hero=document.createElement('section');hero.id='zayeatWelcome';hero.innerHTML='<div class="welcome-copy"><h2>ضایعاتت رو به ارزش تبدیل کن</h2><p>ثبت درخواست، مشاهده قیمت‌ها و ارتباط آسان با مجموعه ضایعات خشک</p><div class="welcome-actions"><button type="button" id="zQuickRegister">ثبت درخواست</button><button type="button" class="secondary" id="zQuickProducts">مشاهده قیمت‌ها</button></div></div><img class="welcome-art" src="./assets/zayeat-truck.webp" alt="وانت مجموعه ضایعات خشک">';
+  const h2=home.querySelector('h2');h2?.after(hero);
+  const shortcuts=document.createElement('section');shortcuts.id='zayeatShortcuts';shortcuts.innerHTML='<button class="z-shortcut" id="zShortcutRegister"><span class="z-ico">📝</span><span><b>ثبت‌نام مشتری</b><small>ایجاد پرونده جدید</small></span></button><button class="z-shortcut" id="zShortcutPrices"><span class="z-ico">♻️</span><span><b>محصولات و قیمت‌ها</b><small>آخرین قیمت‌های ثبت‌شده</small></span></button><button class="z-shortcut" id="zShortcutContact"><span class="z-ico">☎️</span><span><b>ارتباط با مدیران</b><small>پشتیبانی و پاسخ‌گویی</small></span></button><button class="z-shortcut" id="zShortcutAdmin"><span class="z-ico">🔐</span><span><b>ورود مدیران</b><small>پنل مدیریت مجموعه</small></span></button>';
+  hero.after(shortcuts);
+  const go=id=>window.showPage?.(id);
+  ['zQuickRegister','zShortcutRegister'].forEach(id=>$(id)?.addEventListener('click',()=>go('register')));
+  ['zQuickProducts','zShortcutPrices'].forEach(id=>$(id)?.addEventListener('click',()=>go('products')));
+  $('zShortcutContact')?.addEventListener('click',()=>go('contact'));
+  $('zShortcutAdmin')?.addEventListener('click',()=>window.enterPanel?.());
+ }
+ const admin=$('adminMenu');
+ if(admin&&!$('adminQuickLabel')){
+  const label=document.createElement('p');label.id='adminQuickLabel';label.className='muted';label.textContent='همه ابزارهای مدیریت در دسترس شماست؛ یکی را انتخاب کنید.';
+  admin.before(label);
+ }
+ const updateDock=()=>{
+  const id=document.querySelector('.page.active')?.id||'home';
+  dock?.querySelectorAll('button[data-page]').forEach(b=>b.classList.toggle('active',
+   (id==='panelLogin'||id.startsWith('panel'))?b.dataset.page==='panelLogin':b.dataset.page===id));
+  if(id.startsWith('panel')&&id!=='panelLogin')dock?.querySelectorAll('button').forEach(b=>{if(b.dataset.page==='panelLogin')b.classList.add('active')});
+ };
+ const observer=new MutationObserver(updateDock);
+ document.querySelectorAll('.page').forEach(p=>observer.observe(p,{attributes:true,attributeFilter:['class']}));
+ updateDock();
+})();
+</script>
 </body></html>
