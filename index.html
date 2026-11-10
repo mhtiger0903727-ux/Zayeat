@@ -252,5 +252,33 @@ $('passwordForm').addEventListener('submit',async e=>{e.preventDefault();const {
  document.querySelectorAll('.page').forEach(p=>observer.observe(p,{attributes:true,attributeFilter:['class']}));
  updateDock();
 })();
+
+/* واژه‌گذاری متناسب با محیط اجرا: برنامه در اپ، وب‌سایت در مرورگر */
+(function(){
+ const ua=navigator.userAgent||'';
+ const isApp=/(;\\s*wv\\)|\\bZayeatApp\\b|ZayeatAndroidWebView)/i.test(ua) || !!(window.AndroidAppBridge||window.ZayeatApp);
+ const appWord='برنامه', webWord='وب‌سایت';
+ const convert=s=>{
+  if(!s || !/(سایت|وب.?سایت|برنامه)/.test(s)) return s;
+  return isApp
+   ? s.replace(/وب[\\u200c ]?سایت|وبسایت|سایت/g,appWord)
+   : s.replace(/وب[\\u200c ]?سایت|وبسایت/g,webWord).replace(/\\bبرنامه\\b/g,webWord);
+ };
+ const apply=root=>{
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+  let n; while((n=walker.nextNode())) n.nodeValue=convert(n.nodeValue);
+  root.querySelectorAll?.('[title],[aria-label],[placeholder],[alt]').forEach(el=>{
+   for(const a of ['title','aria-label','placeholder','alt']){
+    const v=el.getAttribute(a); if(v) el.setAttribute(a,convert(v));
+   }
+  });
+ };
+ const run=()=>apply(document.body);
+ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',run,{once:true}); else run();
+ new MutationObserver(ms=>ms.forEach(m=>{
+  m.addedNodes.forEach(n=>{if(n.nodeType===Node.TEXT_NODE)n.nodeValue=convert(n.nodeValue);else if(n.nodeType===Node.ELEMENT_NODE)apply(n);});
+  if(m.type==='characterData')m.target.nodeValue=convert(m.target.nodeValue);
+ })).observe(document.documentElement,{subtree:true,childList:true,characterData:true});
+})();
 </script>
 </body></html>
