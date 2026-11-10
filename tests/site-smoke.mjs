@@ -16,9 +16,9 @@ try {
   }
   for (const id of ['products', 'request', 'register', 'contact', 'panelLogin']) {
     await page.locator('#zayeatDock button[data-page="' + id + '"]').click();
-    await page.waitForTimeout(150);
+    await page.waitForTimeout(1000);
     if (!await page.locator('#' + id).evaluate(el => el.classList.contains('active'))) {
-      throw new Error('Navigation failed for page: ' + id);
+      throw new Error('Navigation failed for page: ' + id + '; active=' + await page.locator('.page.active').evaluate(el => el.id).catch(() => 'none') + '; showPage=' + await page.evaluate(() => typeof window.showPage) + '; errors=' + errors.join(' | '));
     }
   }
   if (errors.length) throw new Error('Browser errors: ' + errors.join(' | '));
