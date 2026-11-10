@@ -121,3 +121,32 @@ button:hover{transform:translateY(-1px);box-shadow:0 7px 16px #123b201c}
 .request-status{display:inline-flex;align-items:center;padding:5px 12px;border-radius:20px;background:#edf3ee;color:#49614f;font-size:.82rem;font-weight:700}
 .status-new{background:#fff4dc;color:#986400}.status-reviewing{background:#eaf2ff;color:#245da5}.status-accepted{background:#e6f6eb;color:#18703b}.status-scheduled{background:#eaf5f8;color:#176477}.status-completed{background:#e5f4eb;color:#17623a}.status-rejected{background:#fff0ef;color:#b52d28}
 @media(max-width:600px){.request-item-row{grid-template-columns:1fr 1fr;}.request-item-row .request-item-name{grid-column:1/-1}.request-item-row .request-remove{min-height:42px}.request-admin-card{padding:13px}}
+
+/* Vector pickup animation: illustrated vehicle, no photographic asset */
+#zayeatSplash{isolation:isolate;background:linear-gradient(180deg,#9ccbd0 0%,#d8e7d9 46%,#78936d 68%,#203c2c 100%)!important;perspective:1100px}
+#zayeatSplash .splash-skyline{position:absolute;inset:22% 0 36%;opacity:.75;background:linear-gradient(90deg,#668b70 0 13%,transparent 13% 22%,#77977a 22% 34%,transparent 34% 65%,#77977a 65% 78%,transparent 78% 87%,#668b70 87%);clip-path:polygon(0 30%,100% 30%,100% 100%,0 100%)}
+#zayeatSplash .splash-skyline:after{content:"";position:absolute;inset:35% 0 0;background:repeating-linear-gradient(90deg,transparent 0 8%,#42664b 8.2% 8.7%,transparent 9% 16%)}
+#zayeatSplash .splash-brand{z-index:6;color:#153c28;text-shadow:0 2px 0 #ffffff9c}
+#zayeatSplash .splash-sub{color:#315d43}
+#zayeatSplash .splash-road{z-index:1;bottom:-2%;left:0;width:100%;height:66%;clip-path:polygon(43% 0,57% 0,100% 100%,0 100%);background:linear-gradient(180deg,#606d65,#252e2a 80%,#141b17)!important;transform:none!important;border:0!important;overflow:hidden}
+#zayeatSplash .splash-road:before{content:"";position:absolute;left:49.3%;top:0;width:1.4%;height:100%;background:repeating-linear-gradient(to bottom,#f5edce 0 8%,transparent 8% 18%);animation:roadFlow .7s linear infinite}
+#zayeatSplash .splash-road:after{content:"";position:absolute;inset:0;border:0;background:linear-gradient(90deg,transparent 0 9%,#e8e0c4 9.3% 9.8%,transparent 10.1% 89.9%,#e8e0c4 90.2% 90.7%,transparent 91%)}
+#zayeatSplash .splash-roadside{position:absolute;z-index:2;bottom:0;width:26%;height:43%;background:linear-gradient(90deg,#416548,#75936b);clip-path:polygon(0 40%,100% 0,100% 100%,0 100%);opacity:.85}
+#zayeatSplash .splash-roadside.left{left:0}
+#zayeatSplash .splash-roadside.right{right:0;transform:scaleX(-1)}
+#zayeatSplash .z-vector-truck{position:absolute;z-index:4;left:50%;bottom:9%;width:min(58vw,390px);height:auto;overflow:visible;transform-origin:50% 85%;animation:vectorTruckPass 3.8s cubic-bezier(.18,.66,.25,1) both;filter:drop-shadow(0 16px 14px #10231970)}
+#zayeatSplash .splash-skip{z-index:7;color:#173d28!important;background:#ffffffb8!important;border:1px solid #fff!important}
+@keyframes vectorTruckPass{
+0%{opacity:0;transform:translate(-50%,-42vh) scale(.035)}
+12%{opacity:1}
+38%{opacity:1;transform:translate(-50%,-24vh) scale(.18)}
+62%{opacity:1;transform:translate(-50%,-5vh) scale(.62)}
+78%{opacity:1;transform:translate(-50%,5vh) scale(1.12)}
+92%{opacity:.9;transform:translate(-50%,28vh) scale(2.8)}
+100%{opacity:0;transform:translate(-50%,48vh) scale(4.5)}
+}
+@keyframes roadFlow{from{background-position-y:0}to{background-position-y:100px}}
+#zayeatWelcome .welcome-art{display:block;width:min(100%,330px);max-height:240px;object-fit:contain;filter:drop-shadow(0 12px 10px #163c242b);animation:welcomeTruckFloat 4s ease-in-out infinite}
+@keyframes welcomeTruckFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@media(max-width:640px){#zayeatSplash .z-vector-truck{width:min(82vw,360px);bottom:10%}}
+@media(prefers-reduced-motion:reduce){#zayeatSplash .z-vector-truck{animation:none;opacity:1;transform:translate(-50%,0) scale(.55)}#zayeatSplash .splash-road:before{animation:none}}
