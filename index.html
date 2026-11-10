@@ -220,9 +220,18 @@ $('passwordForm').addEventListener('submit',async e=>{e.preventDefault();const {
 (()=> {
  const $=id=>document.getElementById(id);
  const splash=$('zayeatSplash');
- const finish=()=>{splash?.classList.add('done');setTimeout(()=>splash?.remove(),800)};
+ let splashFinished=false;
+ const finish=()=>{
+  if(splashFinished)return;
+  splashFinished=true;
+  splash?.classList.add('done');
+  setTimeout(()=>splash?.remove(),700);
+  if(!document.querySelector('.page.active'))document.getElementById('home')?.classList.add('active');
+ };
  splash?.querySelector('.splash-skip')?.addEventListener('click',finish);
- setTimeout(finish,3900);
+ // Keep the splash visible for the full truck animation, then always reveal the site.
+ window.addEventListener('load',()=>setTimeout(finish,6500),{once:true});
+ setTimeout(finish,8000);
  const dock=$('zayeatDock');
  dock?.querySelectorAll('button[data-page]').forEach(b=>b.addEventListener('click',()=>{window.showPage?.(b.dataset.page);dock.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));}));
  const home=$('home');
