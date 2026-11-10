@@ -105,3 +105,19 @@ button:hover{transform:translateY(-1px);box-shadow:0 7px 16px #123b201c}
 }
 #zayeatSplash .splash-skip{z-index:5}
 @media(prefers-reduced-motion:reduce){#zayeatSplash img{animation:none!important;opacity:1;transform:translate(-50%,0) scale(.5)}}
+
+/* Customer waste request forms and admin cards */
+.request-items-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:18px 0 10px;color:#174d2e}
+.request-items-head button{white-space:nowrap}
+.request-item-row{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(90px,.8fr) minmax(100px,.7fr) auto;gap:8px;align-items:center;padding:10px;margin:9px 0;border:1px solid #e0ebe1;border-radius:14px;background:#f8fbf8}
+.request-item-row input,.request-item-row select{margin:0!important;min-width:0}
+.request-item-row .request-remove{padding:8px 11px!important}
+.request-admin-card{margin:12px 0;padding:16px;border:1px solid #dce9de;border-radius:17px;background:#fff;box-shadow:0 7px 20px #153e2410}
+.request-admin-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.request-admin-top small{display:block;color:#77857b;margin-top:4px}
+.request-admin-card ul{padding-right:24px;line-height:2}
+.request-admin-card label{display:block;font-weight:700;color:#155b34;margin:12px 0 5px}
+.request-admin-card select{max-width:260px}
+.request-status{display:inline-flex;align-items:center;padding:5px 12px;border-radius:20px;background:#edf3ee;color:#49614f;font-size:.82rem;font-weight:700}
+.status-new{background:#fff4dc;color:#986400}.status-reviewing{background:#eaf2ff;color:#245da5}.status-accepted{background:#e6f6eb;color:#18703b}.status-scheduled{background:#eaf5f8;color:#176477}.status-completed{background:#e5f4eb;color:#17623a}.status-rejected{background:#fff0ef;color:#b52d28}
+@media(max-width:600px){.request-item-row{grid-template-columns:1fr 1fr;}.request-item-row .request-item-name{grid-column:1/-1}.request-item-row .request-remove{min-height:42px}.request-admin-card{padding:13px}}
