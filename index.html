@@ -232,10 +232,12 @@ $('passwordForm').addEventListener('submit',async e=>{e.preventDefault();const {
   }
   if(!document.querySelector('.page.active'))document.getElementById('home')?.classList.add('active');
  };
+ const splashTruck=splash?.querySelector('.z-vector-truck');
  splash?.querySelector('.splash-skip')?.addEventListener('click',finish);
- // Keep the splash visible for the full truck animation, then always reveal the site.
- window.addEventListener('load',()=>setTimeout(finish,6500),{once:true});
- setTimeout(finish,8000);
+ // Splash must never delay access to the actual website: hard limit 4 seconds.
+ splashTruck?.addEventListener('error',finish,{once:true});
+ setTimeout(finish,4000);
+ window.addEventListener('load',()=>setTimeout(finish,4000),{once:true});
  const dock=$('zayeatDock');
  dock?.querySelectorAll('button[data-page]').forEach(b=>b.addEventListener('click',()=>{window.showPage?.(b.dataset.page);dock.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));}));
  const home=$('home');
