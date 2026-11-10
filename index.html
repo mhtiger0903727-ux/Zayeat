@@ -219,6 +219,19 @@ $('passwordForm').addEventListener('submit',async e=>{e.preventDefault();const {
 <script>
 (()=> {
  const $=id=>document.getElementById(id);
+ // Navigation fallback: public pages remain usable even if the remote auth SDK/CDN is unavailable.
+ if(!window.showPage){
+  window.showPage=(id)=>{
+   const target=$(id);
+   if(!target)return;
+   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+   target.classList.add('active');
+   const nav=$('publicNav');
+   if(nav)nav.style.display=id.startsWith('panel')?'none':'block';
+  };
+  window.goBack=()=>window.showPage('home');
+  window.enterPanel=()=>window.showPage('panelLogin');
+ }
  const splash=$('zayeatSplash');
  let splashFinished=false;
  const finish=()=>{
