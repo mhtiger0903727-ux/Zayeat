@@ -154,3 +154,36 @@ button:hover{transform:translateY(-1px);box-shadow:0 7px 16px #123b201c}
 /* Keep the user's original pickup photo, composited into the road scene */
 #zayeatSplash img.z-vector-truck{display:block;object-fit:contain;mix-blend-mode:multiply;filter:drop-shadow(0 16px 14px #10231970);animation:vectorTruckPass 3.8s cubic-bezier(.18,.66,.25,1) both!important}
 #zayeatWelcome img.z-vector-truck{display:block;object-fit:contain;mix-blend-mode:normal;animation:welcomeTruckFloat 4s ease-in-out infinite}
+
+
+/* Smoother cinematic truck approach and pass */
+#zayeatSplash img.z-vector-truck{
+  will-change:transform,opacity,filter;
+  backface-visibility:hidden;
+  transform-origin:50% 82%;
+  animation:truckPassSmooth 5.2s linear both!important;
+}
+#zayeatSplash .splash-road:before{
+  will-change:background-position;
+  animation:roadFlowSmooth 1.15s linear infinite!important;
+}
+@keyframes truckPassSmooth{
+  0%{opacity:0;transform:translate3d(-50%,-43vh,0) scale(.035);filter:blur(1.2px) drop-shadow(0 2px 3px #10231955)}
+  7%{opacity:.9;transform:translate3d(-50%,-40vh,0) scale(.055);filter:blur(.7px) drop-shadow(0 3px 4px #10231955)}
+  20%{opacity:1;transform:translate3d(-50%,-33vh,0) scale(.12);filter:blur(.35px) drop-shadow(0 4px 5px #10231966)}
+  36%{transform:translate3d(-50%,-23vh,0) scale(.25);filter:blur(.1px) drop-shadow(0 7px 7px #10231970)}
+  52%{transform:translate3d(-50%,-11vh,0) scale(.48);filter:blur(0) drop-shadow(0 10px 10px #10231977)}
+  66%{transform:translate3d(-50%,-1vh,0) scale(.78);filter:blur(0) drop-shadow(0 13px 12px #10231988)}
+  76%{transform:translate3d(-50%,5vh,0) scale(1.05);filter:blur(0) drop-shadow(0 16px 14px #10231999)}
+  84%{opacity:1;transform:translate3d(-50%,14vh,0) scale(1.55);filter:blur(.15px) drop-shadow(0 18px 16px #10231999)}
+  93%{opacity:.8;transform:translate3d(-50%,29vh,0) scale(2.55);filter:blur(1px) drop-shadow(0 20px 18px #10231977)}
+  100%{opacity:0;transform:translate3d(-50%,47vh,0) scale(4.1);filter:blur(3px) drop-shadow(0 22px 18px #10231944)}
+}
+@keyframes roadFlowSmooth{
+  from{background-position:0 0}
+  to{background-position:0 120px}
+}
+@media(prefers-reduced-motion:reduce){
+ #zayeatSplash img.z-vector-truck{animation:none!important;opacity:1;transform:translate3d(-50%,0,0) scale(.55)}
+ #zayeatSplash .splash-road:before{animation:none!important}
+}
