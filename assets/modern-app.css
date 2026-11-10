@@ -150,3 +150,7 @@ button:hover{transform:translateY(-1px);box-shadow:0 7px 16px #123b201c}
 @keyframes welcomeTruckFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 @media(max-width:640px){#zayeatSplash .z-vector-truck{width:min(82vw,360px);bottom:10%}}
 @media(prefers-reduced-motion:reduce){#zayeatSplash .z-vector-truck{animation:none;opacity:1;transform:translate(-50%,0) scale(.55)}#zayeatSplash .splash-road:before{animation:none}}
+
+/* Keep the user's original pickup photo, composited into the road scene */
+#zayeatSplash img.z-vector-truck{display:block;object-fit:contain;mix-blend-mode:multiply;filter:drop-shadow(0 16px 14px #10231970);animation:vectorTruckPass 3.8s cubic-bezier(.18,.66,.25,1) both!important}
+#zayeatWelcome img.z-vector-truck{display:block;object-fit:contain;mix-blend-mode:normal;animation:welcomeTruckFloat 4s ease-in-out infinite}
