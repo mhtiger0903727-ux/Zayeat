@@ -63,6 +63,19 @@ body.admin-compact .manage-item,body.admin-compact .folder{padding:8px;margin:7p
 .story-media{flex:1;min-height:0;display:grid;place-items:center;background:#050505}.story-media img,.story-media video{max-width:100%;max-height:100%;width:100%;height:100%;object-fit:contain}
 .story-caption{padding:8px 14px;margin:0;min-height:24px}.story-viewer-controls{display:flex;gap:8px;justify-content:center;align-items:center;padding:8px}
 .story-viewer-controls button{border:1px solid #ffffff55;background:#ffffff18;color:white;border-radius:9px;padding:8px 13px}
+.story-progress{overflow:hidden;position:relative}
+.story-progress #storyProgressFill{display:block;width:0;height:100%;border-radius:8px;background:#28c76f}
+.story-progress #storyProgressFill.photo-running{animation:storyPhotoProgress 4s linear forwards}
+@keyframes storyPhotoProgress{from{width:0}to{width:100%}}
+.story-media{position:relative;touch-action:pan-y;user-select:none}
+.story-media img{pointer-events:none}
+.story-viewer-controls{justify-content:space-between;min-height:58px}
+.story-reactions{display:flex;gap:10px;align-items:center}
+.story-reactions button{min-width:82px;font-size:1rem;font-weight:700}
+.story-reactions button.active{background:#e8f5e9;color:#1b5e20;border-color:#66bb6a}
+.story-reactions button.dislike-active{background:#ffebee;color:#b71c1c;border-color:#ef9a9a}
+.story-viewer-controls #storyDelete{margin-inline-start:auto}
+
 .admin-story-manager{margin-top:18px}.admin-story-manager .form{margin:10px 0}.my-story-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid #ddd}.my-story-row small{color:#777}.my-story-row button{flex:0 0 auto}
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
@@ -96,13 +109,20 @@ body.admin-compact .manage-item,body.admin-compact .folder{padding:8px;margin:7p
 <div id="panelRequests" class="page"><div class="toolbar"><h2>درخواست‌های مشتریان</h2><button class="btn-light" type="button" onclick="loadCustomerRequests()">به‌روزرسانی</button></div><p class="muted">درخواست‌های مشتریان را بررسی و وضعیت هرکدام را مدیریت کنید.</p><div id="customerRequestsList"><p>در حال دریافت...</p></div><div class="nav-buttons"><button class="btn-back" type="button" onclick="showPage('panelHome')">بازگشت به پنل</button></div></div><div id="panelFiles" class="page"><h2>مدیریت سایت</h2><p>همه فایل‌های آپلودشده را ویرایش یا حذف کنید.</p><div id="manageList"></div><div class="nav-buttons"><button class="btn-back" type="button" onclick="showPage('panelHome')">بازگشت به پنل</button></div></div>
 <div id="panelAdmins" class="page"><h2>مدیریت مدیران</h2><p class="muted">ایمیل مدیر دوم را اینجا مجاز کن. سپس همان شخص با همان ایمیل و رمز عبور دلخواه خودش حساب می‌سازد؛ هیچ کد دعوتی وجود ندارد.</p><form id="authorizeManagerForm" class="form"><input id="newAdminEmail" type="email" placeholder="ایمیل یا جیمیل مدیر دوم" required><input id="newAdminUsername" placeholder="نام کاربری (۳ تا ۳۲ حرف انگلیسی/عدد/زیرخط)" pattern="[a-zA-Z0-9_]{3,32}" required><button class="btn-green" type="submit">تأیید ایمیل مدیر</button></form><p id="authorizeManagerMsg" class="msg"></p><div id="adminsList"></div><div class="nav-buttons"><button class="btn-back" type="button" onclick="showPage('panelHome')">بازگشت به پنل</button></div></div>
 <div id="panelProfile" class="page"><h2>پروفایل مدیر</h2><div class="manage-item" id="adminProfileCard" style="text-align:center"><img id="profileAvatarPreview" src="" alt="تصویر پروفایل" style="width:112px;height:112px;border-radius:50%;object-fit:cover;display:none;margin:0 auto 12px"><p class="muted" id="profileEmailText" style="margin:6px 0"></p></div><form id="adminProfileForm" class="form"><h3>عکس پروفایل</h3><input id="profileAvatarGallery" type="file" accept="image/*" hidden><input id="profileAvatarCamera" type="file" accept="image/*" capture="user" hidden><div class="row-btns"><button class="btn-light" type="button" id="chooseProfileAvatar">انتخاب از گالری</button><button class="btn-light" type="button" id="takeProfileAvatar">باز کردن دوربین</button></div><p class="muted small">عکس انتخاب‌شده پس از ذخیره در پروفایل قرار می‌گیرد.</p><label for="profileUsername">نام کاربری</label><input id="profileUsername" minlength="3" maxlength="32" pattern="[A-Za-z0-9_]{3,32}" required placeholder="نام کاربری انگلیسی"><p class="muted small">۳ تا ۳۲ نویسه؛ حروف انگلیسی، عدد و زیرخط. نام کاربری باید یکتا باشد.</p><label for="profileEmailReadonly">جیمیل یا ایمیل</label><input id="profileEmailReadonly" type="email" readonly disabled><label for="profileBio">بیوگرافی</label><textarea id="profileBio" rows="4" maxlength="500" placeholder="چند جمله درباره خودتان..."></textarea><button class="btn-green" type="submit">ذخیره تغییرات پروفایل</button></form><p id="adminProfileMsg" class="msg" aria-live="polite"></p><div class="nav-buttons"><button class="btn-back" type="button" onclick="showPage('panelHome')">بازگشت به پنل</button><button class="btn-light" type="button" onclick="showPage('panelPassword')">تغییر رمز عبور</button></div></div><div id="panelPassword" class="page"><h2>تغییر رمز عبور</h2><form id="passwordForm" class="form"><div class="pass-row"><input id="newPassword" type="password" minlength="10" placeholder="رمز جدید (حداقل ۱۰ کاراکتر)" required autocomplete="new-password"><button class="eye" type="button" onclick="togglePass('newPassword',this)">نمایش</button></div><button class="btn-green" type="submit">ذخیره رمز جدید</button></form><p id="passwordMsg" class="msg"></p><div class="nav-buttons"><button class="btn-back" type="button" onclick="showPage('panelHome')">بازگشت به پنل</button></div></div>
-<div id="storyViewer" class="story-viewer" aria-hidden="true"><div class="story-viewer-panel"><div class="story-viewer-top"><div id="storyProgress" class="story-progress"></div><button type="button" id="storyClose" aria-label="بستن">×</button></div><div id="storyOwner" class="story-owner"></div><div id="storyMedia" class="story-media"></div><p id="storyCaption" class="story-caption"></p><div class="story-viewer-controls"><button type="button" id="storyPrev">قبلی</button><button type="button" id="storyNext">بعدی</button><button type="button" id="storyDelete" class="btn-red hidden">حذف استوری</button></div></div></div><div class="footer"><p>با مدیریت محمد حسین تقی پور و محمد هوشیار</p></div>
+<div id="storyViewer" class="story-viewer" aria-hidden="true"><div class="story-viewer-panel"><div class="story-viewer-top"><div id="storyProgress" class="story-progress"><span id="storyProgressFill"></span></div><button type="button" id="storyClose" aria-label="بستن">×</button></div><div id="storyOwner" class="story-owner"></div><div id="storyMedia" class="story-media"></div><p id="storyCaption" class="story-caption"></p><div class="story-viewer-controls"><div class="story-reactions"><button type="button" id="storyLike" aria-label="لایک">♥ <span id="storyLikeCount">0</span></button><button type="button" id="storyDislike" aria-label="دیسلایک">👎 <span id="storyDislikeCount">0</span></button></div><button type="button" id="storyDelete" class="btn-red hidden">حذف استوری</button></div></div></div><div class="footer"><p>با مدیریت محمد حسین تقی پور و محمد هوشیار</p></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script type="module">
 const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2').catch(() => import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'));
 const SUPABASE_URL='https://bgmdwxksoiupjaounndm.supabase.co';
 const SUPABASE_KEY='sb_publishable_yVdCyd9j9IAKfxm9yjeUjg_WX-ZHoBJ';
-const sb=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false,flowType:'pkce',storage:window.sessionStorage}});
+const STORY_VOTER_KEY='zayeat_story_voter_v1';
+function getStoryVoterId(){
+ let id=localStorage.getItem(STORY_VOTER_KEY);
+ if(!id){id=crypto.randomUUID?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const n=Math.random()*16|0;return(c==='x'?n:(n&3|8)).toString(16);});localStorage.setItem(STORY_VOTER_KEY,id);}
+ return id;
+}
+const storyVoterId=getStoryVoterId();
+const sb=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false,flowType:'pkce',storage:window.sessionStorage},global:{headers:{'x-story-voter-id':storyVoterId}}});
 const $=id=>document.getElementById(id);let historyStack=['home'];let currentUser=null;let currentRole=null;let currentUsername='';let cachedFiles=[];
 const panelIds=['panelLogin','panelManagerSignup','panelHome','panelUpload','panelGoods','panelPeople','panelRequests','panelFiles','panelAdmins','panelProfile','panelStories','panelPassword'];
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -134,7 +154,7 @@ function renderPublicRows(rows){const a=Array.isArray(rows)?rows:[];$('homeFiles
 let publicRenderVersion=0;async function renderPublic(){const version=++publicRenderVersion;try{const a=await publicFiles();if(version!==publicRenderVersion)return;cachedFiles=a;renderPublicRows(a);}catch(e){if(version===publicRenderVersion)console.error('خطا در تازه‌سازی فایل‌های سایت:',e);}}
 void renderPublic();
 /* استوری مدیران: نمایش عمومی ۲۴ ساعته */
-let publicStoryGroups=[],storyGroupIndex=0,storyItemIndex=0;
+let publicStoryGroups=[],storyGroupIndex=0,storyItemIndex=0,storyAdvanceTimer=null,storyActiveVideo=null,storyPointerStart=null;
 function storyPublicUrl(path){return sb.storage.from('site-assets').getPublicUrl(path).data.publicUrl;}
 function groupStories(rows){
  const groups=new Map();
@@ -150,37 +170,90 @@ async function refreshPublicStories(){
  host.innerHTML=publicStoryGroups.map((g,i)=>'<button type="button" class="story-bubble" data-story-group="'+i+'" aria-label="نمایش استوری '+esc(g.name)+'"><span class="story-ring" style="background:conic-gradient('+esc(g.color)+',#55c879,'+esc(g.color)+')">'+(g.avatar?'<img src="'+esc(g.avatar)+'" alt="">':'<span class="story-initial">'+esc((g.name||'م').slice(0,1))+'</span>')+'</span><small>'+esc(g.name)+'</small></button>').join('');
  host.querySelectorAll('[data-story-group]').forEach(b=>b.addEventListener('click',()=>openStoryGroup(Number(b.dataset.storyGroup))));
 }
+function clearStoryAdvance(){if(storyAdvanceTimer){clearTimeout(storyAdvanceTimer);storyAdvanceTimer=null;}if(storyActiveVideo){storyActiveVideo.pause();storyActiveVideo=null;}}
+function finishCurrentStory(){clearStoryAdvance();moveStory(1);}
+async function loadStoryReactions(story){
+ $('storyLikeCount').textContent='…';$('storyDislikeCount').textContent='…';
+ $('storyLike').disabled=true;$('storyDislike').disabled=true;
+ try{
+  const [likes,dislikes,mine]=await Promise.all([
+   sb.from('admin_story_reactions').select('id',{count:'exact',head:true}).eq('story_id',story.id).eq('reaction','like'),
+   sb.from('admin_story_reactions').select('id',{count:'exact',head:true}).eq('story_id',story.id).eq('reaction','dislike'),
+   sb.from('admin_story_reactions').select('reaction').eq('story_id',story.id).eq('voter_id',storyVoterId).maybeSingle()
+  ]);
+  if(likes.error)throw likes.error;if(dislikes.error)throw dislikes.error;if(mine.error)throw mine.error;
+  $('storyLikeCount').textContent=String(likes.count||0);$('storyDislikeCount').textContent=String(dislikes.count||0);
+  $('storyLike').classList.toggle('active',mine.data?.reaction==='like');
+  $('storyDislike').classList.toggle('dislike-active',mine.data?.reaction==='dislike');
+ }catch(e){console.warn('دریافت واکنش‌های استوری ناموفق بود:',e);$('storyLikeCount').textContent='—';$('storyDislikeCount').textContent='—';}
+ finally{$('storyLike').disabled=false;$('storyDislike').disabled=false;}
+}
+async function reactToStory(reaction){
+ const group=publicStoryGroups[storyGroupIndex],story=group?.items[storyItemIndex];if(!story)return;
+ const like=$('storyLike'),dislike=$('storyDislike');like.disabled=true;dislike.disabled=true;
+ try{
+  const {error}=await sb.from('admin_story_reactions').upsert({story_id:story.id,voter_id:storyVoterId,reaction},{onConflict:'story_id,voter_id'});
+  if(error)throw error;
+  await loadStoryReactions(story);
+ }catch(e){alert('ثبت واکنش انجام نشد: '+errText(e));}
+ finally{like.disabled=false;dislike.disabled=false;}
+}
 function renderStoryViewer(){
  const group=publicStoryGroups[storyGroupIndex];if(!group)return closeStoryViewer();
  const story=group.items[storyItemIndex];if(!story)return closeStoryViewer();
+ clearStoryAdvance();
  $('storyOwner').textContent=group.name+' · '+new Date(story.created_at).toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'});
- const url=storyPublicUrl(story.storage_path);
- $('storyMedia').innerHTML=story.mime_type.startsWith('video/')?'<video src="'+esc(url)+'" controls autoplay playsinline></video>':'<img src="'+esc(url)+'" alt="استوری '+esc(group.name)+'">';
+ const url=storyPublicUrl(story.storage_path),media=$('storyMedia'),fill=$('storyProgressFill');
+ media.innerHTML='';fill.classList.remove('photo-running');fill.style.width='0%';
+ if(story.mime_type.startsWith('video/')){
+  const video=document.createElement('video');video.src=url;video.controls=true;video.autoplay=true;video.playsInline=true;video.preload='auto';media.appendChild(video);storyActiveVideo=video;
+  video.addEventListener('timeupdate',()=>{if(video.duration&&Number.isFinite(video.duration))fill.style.width=(video.currentTime/video.duration*100)+'%';});
+  video.addEventListener('ended',finishCurrentStory,{once:true});
+  video.addEventListener('error',()=>console.warn('پخش ویدئوی استوری با خطا مواجه شد.'));
+  const play=video.play();if(play?.catch)play.catch(()=>{});
+ }else{
+  const img=document.createElement('img');img.src=url;img.alt='استوری '+group.name;media.appendChild(img);
+  const startPhotoTimer=()=>{if(storyAdvanceTimer)clearTimeout(storyAdvanceTimer);fill.classList.add('photo-running');storyAdvanceTimer=setTimeout(finishCurrentStory,4000);};
+  if(img.complete)startPhotoTimer();else img.addEventListener('load',startPhotoTimer,{once:true});
+  img.addEventListener('error',()=>{if(storyAdvanceTimer)clearTimeout(storyAdvanceTimer);storyAdvanceTimer=setTimeout(finishCurrentStory,4000);},{once:true});
+ }
  $('storyCaption').textContent=story.caption||'';
- $('storyProgress').style.background='linear-gradient(90deg,#28c76f '+Math.round((storyItemIndex+1)/group.items.length*100)+'%,#ffffff55 0)';
- $('storyPrev').disabled=storyGroupIndex===0&&storyItemIndex===0;
- $('storyNext').disabled=storyGroupIndex===publicStoryGroups.length-1&&storyItemIndex===group.items.length-1;
  $('storyDelete').classList.toggle('hidden',!currentUser||currentUser.id!==group.user_id);
  $('storyViewer').classList.add('open');$('storyViewer').setAttribute('aria-hidden','false');
+ void loadStoryReactions(story);
 }
 function openStoryGroup(i){if(!publicStoryGroups[i])return;storyGroupIndex=i;storyItemIndex=0;renderStoryViewer();}
-function closeStoryViewer(){const v=$('storyViewer');if(v){v.classList.remove('open');v.setAttribute('aria-hidden','true');$('storyMedia').innerHTML='';}}
+function closeStoryViewer(){
+ clearStoryAdvance();const v=$('storyViewer');
+ if(v){v.classList.remove('open');v.setAttribute('aria-hidden','true');$('storyMedia').innerHTML='';}
+ if(document.querySelector('.page.active')?.id!=='home')showPage('home');
+}
 function moveStory(direction){
  const group=publicStoryGroups[storyGroupIndex];if(!group)return;
- if(direction>0){if(storyItemIndex<group.items.length-1)storyItemIndex++;else if(storyGroupIndex<publicStoryGroups.length-1){storyGroupIndex++;storyItemIndex=0;}else return;}
+ if(direction>0){if(storyItemIndex<group.items.length-1)storyItemIndex++;else if(storyGroupIndex<publicStoryGroups.length-1){storyGroupIndex++;storyItemIndex=0;}else{closeStoryViewer();return;}}
  else{if(storyItemIndex>0)storyItemIndex--;else if(storyGroupIndex>0){storyGroupIndex--;storyItemIndex=publicStoryGroups[storyGroupIndex].items.length-1;}else return;}
  renderStoryViewer();
 }
 $('storyClose').addEventListener('click',closeStoryViewer);
-$('storyPrev').addEventListener('click',()=>moveStory(-1));
-$('storyNext').addEventListener('click',()=>moveStory(1));
+$('storyLike').addEventListener('click',()=>reactToStory('like'));
+$('storyDislike').addEventListener('click',()=>reactToStory('dislike'));
 $('storyDelete').addEventListener('click',async()=>{
  const group=publicStoryGroups[storyGroupIndex],story=group?.items[storyItemIndex];
  if(!group||!story||!currentUser||currentUser.id!==group.user_id)return;
- await deleteMyStory(story.id);
- closeStoryViewer();
+ await deleteMyStory(story.id);closeStoryViewer();
 });
 $('storyViewer').addEventListener('click',e=>{if(e.target.id==='storyViewer')closeStoryViewer();});
+$('storyMedia').addEventListener('pointerdown',e=>{if(e.pointerType==='touch')storyPointerStart={x:e.clientX,y:e.clientY};});
+$('storyMedia').addEventListener('pointerup',e=>{
+ if(!storyPointerStart)return;
+ const dx=e.clientX-storyPointerStart.x,dy=e.clientY-storyPointerStart.y;storyPointerStart=null;
+ if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)){moveStory(dx<0?1:-1);}
+});
+$('storyMedia').addEventListener('click',e=>{
+ if(e.target.closest('video'))return;
+ const rect=$('storyMedia').getBoundingClientRect(),x=e.clientX-rect.left;
+ if(x>rect.width*.58)moveStory(1);else if(x<rect.width*.42)moveStory(-1);
+});
 document.addEventListener('keydown',e=>{if(!$('storyViewer').classList.contains('open'))return;if(e.key==='Escape')closeStoryViewer();if(e.key==='ArrowRight')moveStory(1);if(e.key==='ArrowLeft')moveStory(-1);});
 async function loadMyStories(){
  if(!currentUser)return;
