@@ -172,6 +172,12 @@ function moveStory(direction){
 $('storyClose').addEventListener('click',closeStoryViewer);
 $('storyPrev').addEventListener('click',()=>moveStory(-1));
 $('storyNext').addEventListener('click',()=>moveStory(1));
+$('storyDelete').addEventListener('click',async()=>{
+ const group=publicStoryGroups[storyGroupIndex],story=group?.items[storyItemIndex];
+ if(!group||!story||!currentUser||currentUser.id!==group.user_id)return;
+ await deleteMyStory(story.id);
+ closeStoryViewer();
+});
 $('storyViewer').addEventListener('click',e=>{if(e.target.id==='storyViewer')closeStoryViewer();});
 document.addEventListener('keydown',e=>{if(!$('storyViewer').classList.contains('open'))return;if(e.key==='Escape')closeStoryViewer();if(e.key==='ArrowRight')moveStory(1);if(e.key==='ArrowLeft')moveStory(-1);});
 async function loadMyStories(){
