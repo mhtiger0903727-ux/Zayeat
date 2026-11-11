@@ -51,7 +51,7 @@
 
 .location-picker{margin:12px 0 18px;padding:12px;border:1px solid #dce8de;border-radius:12px;background:#f8fbf8;text-align:right}.location-picker #customerLocationMap{height:260px;width:100%;margin:10px 0;border:1px solid #dce5df;border-radius:10px;z-index:1}.location-picker button{margin:4px 0}.location-picker .muted{margin:5px 0}
 body.admin-compact .manage-item,body.admin-compact .folder{padding:8px;margin:7px 0}body.admin-compact .page{padding:14px}#adminProfileForm label{display:block;font-weight:600;margin-top:8px}
-.admin-stories-strip{display:flex;gap:14px;overflow-x:auto;padding:14px 4px 18px;margin:12px 0 18px;min-height:112px;scrollbar-width:thin}
+.admin-stories-strip{display:flex;flex-wrap:wrap;gap:14px;overflow-x:auto;padding:10px 4px 16px;margin:10px 0 16px;min-height:0;scrollbar-width:thin}.admin-stories-strip::before{content:'استوری مدیران';flex:0 0 100%;color:#1b5e20;font-weight:800;font-size:.95rem;padding:0 4px 2px}
 .story-bubble{flex:0 0 78px;border:0;background:transparent;color:inherit;cursor:pointer;text-align:center;padding:0}
 .story-ring{display:grid;place-items:center;width:72px;height:72px;border-radius:50%;padding:3px;margin:auto;background:conic-gradient(#19a765,#55c879,#19a765);box-shadow:0 2px 9px #0002}
 .story-ring img,.story-ring .story-initial{width:100%;height:100%;border:3px solid white;border-radius:50%;object-fit:cover;background:#e6f2e9;display:grid;place-items:center;font-weight:800}
@@ -146,6 +146,7 @@ async function refreshPublicStories(){
  if(error){console.warn('خواندن استوری‌ها ناموفق بود:',error);return;}
  publicStoryGroups=groupStories(data||[]);
  const host=$('homeStories');if(!host)return;
+ host.classList.toggle('hidden',!publicStoryGroups.length);
  host.innerHTML=publicStoryGroups.map((g,i)=>'<button type="button" class="story-bubble" data-story-group="'+i+'" aria-label="نمایش استوری '+esc(g.name)+'"><span class="story-ring" style="background:conic-gradient('+esc(g.color)+',#55c879,'+esc(g.color)+')">'+(g.avatar?'<img src="'+esc(g.avatar)+'" alt="">':'<span class="story-initial">'+esc((g.name||'م').slice(0,1))+'</span>')+'</span><small>'+esc(g.name)+'</small></button>').join('');
  host.querySelectorAll('[data-story-group]').forEach(b=>b.addEventListener('click',()=>openStoryGroup(Number(b.dataset.storyGroup))));
 }
@@ -381,7 +382,7 @@ $('passwordForm').addEventListener('submit',async e=>{e.preventDefault();const {
  const home=$('home');
  if(home&&!$('zayeatWelcome')){
   const hero=document.createElement('section');hero.id='zayeatWelcome';hero.innerHTML='<div class="welcome-copy"><h2>ضایعاتت رو به ارزش تبدیل کن</h2><p>ثبت درخواست، مشاهده قیمت‌ها و ارتباط آسان با مجموعه ضایعات خشک</p><div class="welcome-actions"><button type="button" id="zQuickRegister">ثبت درخواست</button><button type="button" class="secondary" id="zQuickProducts">مشاهده قیمت‌ها</button></div></div><img class="welcome-art z-vector-truck" src="./assets/recycling-pickup.webp?v=2" alt="وانت حمل ضایعات خشک">';
-  const h2=home.querySelector('h2');h2?.after(hero);
+  const h2=home.querySelector('h2');const storyStrip=$('homeStories');if(storyStrip){h2?.after(storyStrip);storyStrip.after(hero);}else h2?.after(hero);
   const shortcuts=document.createElement('section');shortcuts.id='zayeatShortcuts';shortcuts.innerHTML='<button class="z-shortcut" id="zShortcutRegister"><span class="z-ico">📝</span><span><b>ثبت‌نام مشتری</b><small>ایجاد پرونده جدید</small></span></button><button class="z-shortcut" id="zShortcutPrices"><span class="z-ico">♻️</span><span><b>محصولات و قیمت‌ها</b><small>آخرین قیمت‌های ثبت‌شده</small></span></button><button class="z-shortcut" id="zShortcutContact"><span class="z-ico">☎️</span><span><b>ارتباط با مدیران</b><small>پشتیبانی و پاسخ‌گویی</small></span></button><button class="z-shortcut" id="zShortcutAdmin"><span class="z-ico">🔐</span><span><b>ورود مدیران</b><small>پنل مدیریت مجموعه</small></span></button>';
   hero.after(shortcuts);
   const go=id=>window.showPage?.(id);
