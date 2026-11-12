@@ -79,19 +79,6 @@ body.admin-compact .manage-item,body.admin-compact .folder{padding:8px;margin:7p
 
 .admin-story-manager{margin-top:18px}.admin-story-manager .form{margin:10px 0}.my-story-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid #ddd}.my-story-row small{color:#777}.my-story-row button{flex:0 0 auto}
 
-/* Site notifications */
-#siteNotificationButton{position:relative;display:inline-flex;align-items:center;gap:6px;background:#fff;color:#1b5e20;border:1px solid #c8e6c9;border-radius:22px;padding:7px 12px;font-size:.88rem;font-weight:800;white-space:nowrap}
-#siteNotificationBadge{display:none;min-width:19px;height:19px;padding:0 5px;border-radius:12px;background:#c62828;color:#fff;font-size:11px;line-height:19px;text-align:center}
-#siteNotificationPanel{display:none;position:fixed;z-index:10020;top:12px;left:12px;width:min(370px,calc(100vw - 24px));max-height:min(78vh,620px);overflow:auto;background:#fff;border:1px solid #dce8de;border-radius:16px;box-shadow:0 14px 40px #0003;padding:14px;color:#26352b}
-#siteNotificationPanel.open{display:block}
-.site-notification-item{padding:11px 8px;border-bottom:1px solid #edf1ed;cursor:pointer;text-align:right}
-.site-notification-item:last-child{border-bottom:0}
-.site-notification-item b{display:block;color:#1b5e20}
-.site-notification-item small{display:block;color:#718078;margin-top:3px}
-#siteNotificationToast{position:fixed;z-index:10030;bottom:22px;left:50%;transform:translateX(-50%);width:min(420px,calc(100vw - 28px));background:#173d24;color:#fff;border-radius:13px;padding:12px 16px;box-shadow:0 8px 28px #0004;display:none;text-align:right}
-#siteNotificationToast.show{display:block}
-@media(max-width:600px){#siteNotificationButton{padding:7px 9px;font-size:.78rem}#siteNotificationPanel{top:8px;left:8px}}
-
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <link rel="stylesheet" href="./assets/modern-app.css?v=7">
@@ -139,58 +126,6 @@ function getStoryVoterId(){
 const storyVoterId=getStoryVoterId();
 const sb=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false,flowType:'pkce',storage:window.sessionStorage},global:{headers:{'x-story-voter-id':storyVoterId}}});
 const $=id=>document.getElementById(id);
-/* Real-time public notifications for new stories and published products */
-(function initSiteNotifications(){
- const topbar=$('publicNav');
- if(!topbar || $('siteNotificationButton')) return;
- const button=document.createElement('button');
- button.type='button';button.id='siteNotificationButton';
- button.innerHTML='🔔 اعلان‌ها <span id="siteNotificationBadge">0</span>';
- button.setAttribute('aria-label','نمایش اعلان‌های سایت');
- const clock=$('liveClock');topbar.insertBefore(button,clock||null);
- const panel=document.createElement('section');panel.id='siteNotificationPanel';panel.setAttribute('aria-label','اعلان‌های سایت');
- panel.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><b style="color:#1b5e20">اعلان‌های الو ضایعات</b><button type="button" id="closeSiteNotifications" class="btn-light">بستن</button></div><p class="muted small">تازه‌ترین استوری‌ها و محصولات منتشرشده</p><button type="button" id="enableBrowserNotifications" class="btn-green" style="width:100%;margin:5px 0 10px">فعال‌سازی اعلان مرورگر</button><div id="siteNotificationList"><p class="muted">در حال دریافت اعلان‌ها…</p></div>';
- document.body.append(panel);
- const toast=document.createElement('div');toast.id='siteNotificationToast';toast.setAttribute('role','status');toast.setAttribute('aria-live','polite');document.body.append(toast);
- const seenKey='alozayeat_notifications_seen_v1';
- let notifications=[],toastTimer=null;
- const seenAt=()=>Number(localStorage.getItem(seenKey)||0);
- const unread=()=>notifications.filter(n=>new Date(n.created_at).getTime()>seenAt()).length;
- const updateBadge=()=>{const badge=$('siteNotificationBadge');const n=unread();badge.textContent=n>99?'99+':String(n);badge.style.display=n?'inline-block':'none';};
- const render=()=>{
-  const list=$('siteNotificationList');if(!list)return;
-  if(!notifications.length){list.innerHTML='<p class="muted">هنوز اعلانی ثبت نشده است.</p>';return;}
-  list.innerHTML=notifications.map(n=>'<div class="site-notification-item" data-notification-id="'+esc(n.id)+'" data-target="'+esc(n.target_page||'home')+'"><b>'+(n.kind==='story'?'📸 ':'♻️ ')+esc(n.title)+'</b>'+(n.body?'<span>'+esc(n.body)+'</span>':'')+'<small>'+esc(new Date(n.created_at).toLocaleString('fa-IR'))+'</small></div>').join('');
-  list.querySelectorAll('[data-notification-id]').forEach(item=>item.addEventListener('click',()=>{
-   localStorage.setItem(seenKey,String(Date.now()));updateBadge();panel.classList.remove('open');
-   const target=item.dataset.target==='products'?'products':'home';window.showPage?.(target);
-   if(target==='home')document.getElementById('homeStories')?.scrollIntoView({behavior:'smooth',block:'center'});
-  }));
- };
- const announce=n=>{
-  notifications=[n,...notifications.filter(x=>x.id!==n.id)].slice(0,30);render();updateBadge();
-  toast.innerHTML='<b>'+esc(n.title)+'</b>'+(n.body?'<div>'+esc(n.body)+'</div>':'');
-  toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),6500);
-  if('Notification' in window && Notification.permission==='granted'){
-   try{const notice=new Notification(n.title,{body:n.body||'برای مشاهده وارد الو ضایعات شوید',tag:'alozayeat-'+n.id});notice.onclick=()=>{window.focus();window.showPage?.(n.target_page==='products'?'products':'home');notice.close();};}catch(e){console.warn('Browser notification unavailable',e);}
-  }
- };
- button.addEventListener('click',()=>{panel.classList.toggle('open');if(panel.classList.contains('open')){localStorage.setItem(seenKey,String(Date.now()));updateBadge();}});
- $('closeSiteNotifications').addEventListener('click',()=>panel.classList.remove('open'));
- $('enableBrowserNotifications').addEventListener('click',async()=>{
-  const b=$('enableBrowserNotifications');
-  if(!('Notification' in window)){b.textContent='این مرورگر از اعلان پشتیبانی نمی‌کند';return;}
-  if(!window.isSecureContext){b.textContent='برای اعلان مرورگر باید سایت با HTTPS باز شود';return;}
-  try{const permission=await Notification.requestPermission();b.textContent=permission==='granted'?'اعلان مرورگر فعال شد ✓':permission==='denied'?'اجازه اعلان مسدود شده؛ از تنظیمات مرورگر فعالش کن.':'اجازه اعلان داده نشد';}
-  catch(e){b.textContent='فعال‌سازی اعلان ممکن نشد';}
- });
- document.addEventListener('click',e=>{if(panel.classList.contains('open')&&!panel.contains(e.target)&&!button.contains(e.target))panel.classList.remove('open');});
- sb.from('site_notifications').select('id,kind,title,body,target_page,entity_id,created_at').order('created_at',{ascending:false}).limit(30)
-  .then(({data,error})=>{if(error){console.warn('Notifications load failed',error);$('siteNotificationList').innerHTML='<p class="muted">دریافت اعلان‌ها موقتاً ممکن نیست.</p>';return;}notifications=data||[];render();updateBadge();});
- sb.channel('site-notifications-live')
-  .on('postgres_changes',{event:'INSERT',schema:'public',table:'site_notifications'},payload=>announce(payload.new))
-  .subscribe(status=>{if(status==='CHANNEL_ERROR')console.warn('Realtime notifications connection failed');});
-})();
 let historyStack=['home'];let currentUser=null;let currentRole=null;let currentUsername='';let currentPermissions={upload:true,goods:true,people:true,requests:true,files:true,stories:true};let cachedFiles=[];
 const panelIds=['panelLogin','panelManagerSignup','panelHome','panelUpload','panelGoods','panelPeople','panelRequests','panelFiles','panelAdmins','panelProfile','panelStories','panelPassword'];
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
