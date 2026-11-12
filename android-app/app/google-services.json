@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "15436981172",
+    "project_id": "alo-zayeat",
+    "storage_bucket": "alo-zayeat.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:15436981172:android:841c000125479c9c3e08e1",
+        "android_client_info": {
+          "package_name": "com.zayeat.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDgy-WftJ6T8D3eRKY62AFlP1xWf1_SApw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
