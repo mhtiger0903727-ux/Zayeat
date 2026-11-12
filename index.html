@@ -460,9 +460,10 @@ function lookupAddressOnMap(){
    if(!coords||!Number.isFinite(coords[0])||!Number.isFinite(coords[1]))throw new Error('no result');
    const lng=coords[0],lat=coords[1],props=feature.properties||{};
    const label=[props.name,props.street,props.housenumber,props.district,props.city,props.state,props.country].filter(Boolean).join('، ');
-   $('locationLatitude').value=lat.toFixed(7);$('locationLongitude').value=lng.toFixed(7);$('locationLabel').value=label||query;
    setRegistrationMarker(lat,lng,15);
-   $('locationStatus').textContent='موقعیت تقریبی آدرس روی نقشه مشخص شد. در صورت نیاز، نقطه را با لمس نقشه دقیق‌تر کنید.';
+   await selectCustomerLocation(lat,lng);
+   $('locationLabel').value=label||query;
+   $('locationStatus').textContent='موقعیت تقریبی آدرس روی نقشه مشخص شد. محدوده خدماتی بررسی شد؛ در صورت نیاز نقطه را با لمس نقشه دقیق‌تر کنید.';
   }catch(error){
    if(error.name==='AbortError'||version!==addressLookupVersion)return;
    $('locationStatus').textContent='موقعیت این آدرس پیدا نشد؛ می‌توانید نقطه را دستی روی نقشه انتخاب کنید یا موقعیت فعلی را بگیرید.';
