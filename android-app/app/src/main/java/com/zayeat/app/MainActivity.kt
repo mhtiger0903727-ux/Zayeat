@@ -195,7 +195,8 @@ class MainActivity : ComponentActivity() {
         }
 
         if (savedInstanceState == null) {
-            webView.loadUrl(SITE_URL)
+            openNotificationTarget(intent)
+            if (webView.url == null) webView.loadUrl(SITE_URL)
         } else {
             webView.restoreState(savedInstanceState)
         }
@@ -205,6 +206,28 @@ class MainActivity : ComponentActivity() {
                 if (webView.canGoBack()) webView.goBack() else finish()
             }
         })
+    }
+
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        openNotificationTarget(intent)
+    }
+
+    private fun openNotificationTarget(source: Intent?) {
+        val target = source?.getStringExtra("notification_target")?.trim().orEmpty()
+        if (target.isEmpty() || target == "home" || target == "/") {
+            webView.loadUrl(SITE_URL)
+            return
+        }
+        val safePath = target.removePrefix("/")
+        if (safePath.startsWith("http://") || safePath.startsWith("https://") || safePath.contains("..")) {
+            webView.loadUrl(SITE_URL)
+        } else {
+            webView.loadUrl(SITE_URL + safePath)
+        }
+        source?.removeExtra("notification_target")
     }
 
     @Deprecated("Legacy activity result API is required by WebChromeClient file chooser")
