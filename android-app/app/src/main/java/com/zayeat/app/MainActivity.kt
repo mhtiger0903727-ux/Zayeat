@@ -1,6 +1,7 @@
 package com.zayeat.app
 
 import android.Manifest
+import android.os.Build
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
@@ -20,6 +21,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.app.ActivityCompat
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 
 class MainActivity : ComponentActivity() {
@@ -63,6 +65,10 @@ class MainActivity : ComponentActivity() {
             )
         )
         setContentView(refreshLayout)
+
+        if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 7201)
+        }
 
         webView.settings.apply {
             javaScriptEnabled = true
