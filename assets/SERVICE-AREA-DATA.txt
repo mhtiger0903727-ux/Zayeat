@@ -1,0 +1,9 @@
+Service-area boundary data
+
+File: babol-county-boundary.geojson
+Source: OpenStreetMap relation 6554904 (Babol County, admin_level=5), extracted from the public hosseinhabibi2004/iran-geojson dataset.
+License: Open Database License (ODbL) 1.0.
+Required attribution: © OpenStreetMap contributors — https://www.openstreetmap.org/copyright
+
+Important scope note:
+This is the mapped administrative boundary of Babol County. It is a geographic baseline, not a surveyed operational service polygon. The separately specified road cutoffs (Zargarshahr, Dawoodasht, Hadi Shahr, and three kilometres beyond Hadi Norouzi Square) may extend beyond or differ from the administrative relation and must not be represented as verified by this polygon alone.
