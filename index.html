@@ -94,7 +94,7 @@ body.admin-compact .manage-item,body.admin-compact .folder{padding:8px;margin:7p
   <button class="btn-light" id="useCurrentLocation" type="button">استفاده از موقعیت فعلی من</button>
   <div id="customerLocationMap" role="application" aria-label="نقشه انتخاب موقعیت مکانی"></div>
   <p id="locationStatus" class="muted small" aria-live="polite">هنوز موقعیتی انتخاب نشده است.</p>
-  <a id="customerVoiceRoute" class="btn-light hidden" href="#" target="_blank" rel="noopener">🧭 مسیریابی صوتی تا این نشانی</a><button id="startCustomerVoiceNavigation" class="btn-light hidden" type="button" onclick="startVoiceNavigationTo(parseFloat(document.getElementById('locationLatitude').value),parseFloat(document.getElementById('locationLongitude').value))">🔊 شروع راهنمای صوتی فارسی</button><button id="stopVoiceNavigation" class="btn-light hidden" type="button" onclick="stopVoiceNavigation()">توقف راهنمای صوتی</button><p id="coverageStatus" class="muted small" aria-live="polite">محدوده خدماتی: شهرستان بابل و نواحی تعیین‌شده</p>
+  <a id="customerVoiceRoute" class="btn-light hidden" href="#" target="_blank" rel="noopener">🧭 مسیریابی صوتی تا این نشانی</a><button id="startCustomerVoiceNavigation" class="btn-light hidden" type="button" onclick="startVoiceNavigationTo(parseFloat(document.getElementById('locationLatitude').value),parseFloat(document.getElementById('locationLongitude').value))">🔊 شروع راهنمای صوتی فارسی</button><button id="stopVoiceNavigation" class="btn-light hidden" type="button" onclick="stopVoiceNavigation()">توقف راهنمای صوتی</button><p id="coverageStatus" class="muted small" aria-live="polite">مرز اداری شهرستان بابل (داده نقشه OpenStreetMap)</p>
   <button class="btn-light" id="clearCustomerLocation" type="button">پاک کردن موقعیت انتخاب‌شده</button>
   <input id="locationLatitude" type="hidden">
   <input id="locationLongitude" type="hidden">
@@ -341,6 +341,7 @@ function speakPersian(text){
  window.speechSynthesis.cancel();
  const utterance=new SpeechSynthesisUtterance(text);utterance.lang='fa-IR';utterance.rate=0.92;utterance.pitch=1;
  const voices=window.speechSynthesis.getVoices();const voice=voices.find(v=>/^fa(-|_)/i.test(v.lang)||/persian|فارسی/i.test(v.name));if(voice)utterance.voice=voice;
+ if(!voice)voiceStatus('صدای فارسی بومی پیدا نشد؛ در صورت تلفظ نامناسب، موتور گفتار فارسی دستگاه را نصب یا فعال کنید.');
  utterance.onerror=()=>voiceStatus('صدای فارسی روی دستگاه در دسترس نیست؛ موتور تبدیل متن به گفتار فارسی را فعال کنید.');
  window.speechSynthesis.speak(utterance);return true;
 }
@@ -364,6 +365,7 @@ window.stopVoiceNavigation=function(){
  if(activeVoiceWatch!==null&&navigator.geolocation)navigator.geolocation.clearWatch(activeVoiceWatch);
  activeVoiceWatch=null;activeVoiceRoute=null;activeVoiceStepIndex=0;
  if(window.speechSynthesis)window.speechSynthesis.cancel();
+ if(window.AndroidTTS&&typeof window.AndroidTTS.stop==='function')window.AndroidTTS.stop();
  if(activeVoiceLine&&registrationMap){registrationMap.removeLayer(activeVoiceLine);activeVoiceLine=null;}
  $('stopVoiceNavigation')?.classList.add('hidden');
  voiceStatus('راهنمای صوتی متوقف شد.');
