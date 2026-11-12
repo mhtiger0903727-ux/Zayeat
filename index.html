@@ -414,7 +414,7 @@ const requestStatusLabels={new:'جدید',reviewing:'در حال بررسی',acc
 async function loadCustomerRequests(){
  const box=$('customerRequestsList');if(!box)return;box.innerHTML='<p>در حال دریافت درخواست‌ها...</p>';
  try{
-  const {data,error}=await sb.from('customer_requests').select('id,items,notes,status,created_at,updated_at,customers(file_no,first_name,last_name,phone,address)').order('created_at',{ascending:false}).limit(500);
+  const {data,error}=await sb.rpc('get_admin_customer_requests');
   if(error)throw error;
   box.innerHTML=(data||[]).map(r=>{
    const c=r.customers||{};const date=new Date(r.created_at).toLocaleString('fa-IR');
