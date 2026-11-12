@@ -16,6 +16,9 @@ import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.webkit.JavascriptInterface
+import android.speech.tts.TextToSpeech
+import java.util.Locale
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
@@ -30,6 +33,8 @@ class MainActivity : ComponentActivity() {
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
     private var geoCallback: GeolocationPermissions.Callback? = null
     private var geoOrigin: String? = null
+    private var textToSpeech: TextToSpeech? = null
+    @Volatile private var ttsReady = false
 
     private val locationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
@@ -66,6 +71,39 @@ class MainActivity : ComponentActivity() {
         }
 
         webView = WebView(this)
+        textToSpeech = TextToSpeech(this) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                val languageStatus = textToSpeech?.setLanguage(Locale("fa", "IR"))
+                ttsReady = languageStatus != TextToSpeech.LANG_MISSING_DATA &&
+                    languageStatus != TextToSpeech.LANG_NOT_SUPPORTED
+            } else {
+                ttsReady = false
+            }
+        }
+        webView.addJavascriptInterface(object {
+            @JavascriptInterface
+            fun isReady(): Boolean = ttsReady
+
+            @JavascriptInterface
+            fun speak(message: String) {
+                val safeMessage = message.take(500)
+                runOnUiThread {
+                    if (ttsReady) {
+                        textToSpeech?.speak(
+                            safeMessage,
+                            TextToSpeech.QUEUE_FLUSH,
+                            null,
+                            "zayeat_persian_navigation"
+                        )
+                    }
+                }
+            }
+
+            @JavascriptInterface
+            fun stop() {
+                runOnUiThread { textToSpeech?.stop() }
+            }
+        }, "AndroidTTS")
         refreshLayout.addView(
             webView,
             ViewGroup.LayoutParams(
@@ -254,6 +292,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         filePathCallback?.onReceiveValue(null)
+        textToSpeech?.stop()
+        textToSpeech?.shutdown()
+        textToSpeech = null
         webView.destroy()
         super.onDestroy()
     }
