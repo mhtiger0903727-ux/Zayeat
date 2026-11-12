@@ -33,8 +33,17 @@ class MainActivity : ComponentActivity() {
 
     private val locationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
-            val granted = result.values.any { it }
-            geoCallback?.invoke(geoOrigin, granted, false)
+            val preciseGranted = ContextCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+            geoCallback?.invoke(geoOrigin, preciseGranted, false)
+            if (!preciseGranted) {
+                Toast.makeText(
+                    this,
+                    "برای ثبت موقعیت دقیق، دسترسی «موقعیت مکانی دقیق» را فعال کنید.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
             geoCallback = null
             geoOrigin = null
         }
@@ -175,11 +184,7 @@ class MainActivity : ComponentActivity() {
                 val fine = ContextCompat.checkSelfPermission(
                     this@MainActivity, Manifest.permission.ACCESS_FINE_LOCATION
                 ) == PackageManager.PERMISSION_GRANTED
-                val coarse = ContextCompat.checkSelfPermission(
-                    this@MainActivity, Manifest.permission.ACCESS_COARSE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-
-                if (fine || coarse) {
+                if (fine) {
                     callback?.invoke(origin, true, false)
                 } else {
                     geoOrigin = origin
