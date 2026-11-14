@@ -13,9 +13,9 @@
  }
  function updateSocial(el){const id=el.dataset.productSocial;const mine=likes.some(x=>x.product_id===id&&x.voter_id===voter);el.querySelector('.social-heart').textContent=mine?'♥':'♡';el.querySelector('.social-heart').classList.toggle('liked',mine);el.querySelector('.social-count').textContent=fmt(likes.filter(x=>x.product_id===id).length);const cs=comments.filter(x=>x.product_id===id);el.querySelector('.social-comments-count').textContent=fmt(cs.length);el.querySelector('.social-comments-list').innerHTML=cs.map(c=>'<p>'+escapeHTML(c.body)+' <small>'+new Date(c.created_at).toLocaleDateString('fa-IR')+'</small></p>').join('')||'<p class="muted">هنوز نظری ثبت نشده است.</p>';}
  function decorate(){
-  document.querySelectorAll('#homeFiles .card,#productList .card').forEach((card,i)=>{
+  document.querySelectorAll('#homeFiles .card,#productList .card').forEach(card=>{
    if(card.querySelector('[data-product-social]'))return;
-   const host=card.closest('#homeFiles,#productList');const list=(cachedFiles||[]).filter(f=>f.placement===(host.id==='homeFiles'?'home':'products')&&f.is_published!==false);const f=list[i];if(!f)return;
+   const host=card.closest('#homeFiles,#productList');const list=(cachedFiles||[]).filter(f=>f.placement===(host.id==='homeFiles'?'home':'products')&&f.is_published!==false);const i=Array.prototype.indexOf.call(host.children,card);const f=list[i];if(!f)return;
    const el=document.createElement('div');el.className='product-social';el.dataset.productSocial=f.id;
    el.innerHTML='<div class="social-actions"><button type="button" class="social-heart" aria-label="لایک محصول">♡</button><span class="social-count">۰</span><button type="button" class="social-open">💬 نظرات (<span class="social-comments-count">۰</span>)</button></div><div class="social-panel" hidden><div class="social-comments-list"></div><form class="social-comment-form"><input maxlength="500" required placeholder="نظر خود را بنویسید"><button type="submit" class="btn-green">ارسال</button></form></div>';
    card.querySelector('.body')?.append(el);updateSocial(el);
@@ -24,7 +24,7 @@
    el.querySelector('form').onsubmit=async ev=>{ev.preventDefault();const input=el.querySelector('input'),body=input.value.trim();if(!body)return;const {error}=await sb.from('product_comments').insert({product_id:f.id,voter_id:voter,body});if(error){alert('ثبت نظر ناموفق بود: '+error.message);return;}input.value='';await refreshSocial();};
   });
  }
- const observer=new MutationObserver(()=>{if(document.querySelectorAll('#homeFiles .card:not(:has([data-product-social])),#productList .card:not(:has([data-product-social]))').length)decorate();});
+ const observer=new MutationObserver(()=>{if([...document.querySelectorAll('#homeFiles .card,#productList .card')].some(card=>!card.querySelector('[data-product-social]')))decorate();});
  ['homeFiles','productList'].forEach(id=>{const el=document.getElementById(id);if(el)observer.observe(el,{childList:true});});
  decorate();refreshSocial();setInterval(refreshSocial,30000);
 
