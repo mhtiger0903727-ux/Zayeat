@@ -2,6 +2,7 @@
 (()=>{
  const voter=localStorage.getItem('zayeat_product_voter')||crypto.randomUUID();
  localStorage.setItem('zayeat_product_voter',voter);
+ const tokenKey='zayeat_product_owner_token';const token=localStorage.getItem(tokenKey)||crypto.randomUUID();localStorage.setItem(tokenKey,token);
  const fmt=n=>Math.round(n).toLocaleString('fa-IR');
  const parsePrice=v=>{let s=String(v||'').replace(/[۰-۹]/g,c=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(c)).replace(/[٠-٩]/g,c=>'٠١٢٣٤٥٦٧٨٩'.indexOf(c));let m=s.replace(/[,٬،\s]/g,'').match(/\d+(?:\.\d+)?/);return m?Number(m[0]):0};
  const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -19,7 +20,7 @@
    el.innerHTML='<div class="social-actions"><button type="button" class="social-heart" aria-label="لایک محصول">♡</button><span class="social-count">۰</span><button type="button" class="social-open">💬 نظرات (<span class="social-comments-count">۰</span>)</button></div><div class="social-panel" hidden><div class="social-comments-list"></div><form class="social-comment-form"><input maxlength="500" required placeholder="نظر خود را بنویسید"><button type="submit" class="btn-green">ارسال</button></form></div>';
    card.querySelector('.body')?.append(el);updateSocial(el);
    el.querySelector('.social-open').onclick=()=>{const p=el.querySelector('.social-panel');p.hidden=!p.hidden;};
-   el.querySelector('.social-heart').onclick=async()=>{const btn=el.querySelector('.social-heart');btn.disabled=true;try{const mine=likes.some(x=>x.product_id===f.id&&x.voter_id===voter);const q=mine?sb.from('product_likes').delete().eq('product_id',f.id).eq('voter_id',voter):sb.from('product_likes').insert({product_id:f.id,voter_id:voter});const {error}=await q;if(error)throw error;await refreshSocial();}catch(e){alert('ثبت لایک ناموفق بود: '+e.message)}finally{btn.disabled=false;}};
+   el.querySelector('.social-heart').onclick=async()=>{const btn=el.querySelector('.social-heart');btn.disabled=true;try{const {error}=await sb.rpc('toggle_product_like',{p_product_id:f.id,p_voter_id:voter,p_token:token});await refreshSocial();}catch(e){alert('ثبت لایک ناموفق بود: '+e.message)}finally{btn.disabled=false;}};
    el.querySelector('form').onsubmit=async ev=>{ev.preventDefault();const input=el.querySelector('input'),body=input.value.trim();if(!body)return;const {error}=await sb.from('product_comments').insert({product_id:f.id,voter_id:voter,body});if(error){alert('ثبت نظر ناموفق بود: '+error.message);return;}input.value='';await refreshSocial();};
   });
  }
