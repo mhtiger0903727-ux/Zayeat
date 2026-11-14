@@ -15,7 +15,7 @@
  function decorate(){
   document.querySelectorAll('#homeFiles .card,#productList .card').forEach(card=>{
    if(card.querySelector('[data-product-social]'))return;
-   const host=card.closest('#homeFiles,#productList');const list=(cachedFiles||[]).filter(f=>f.placement===(host.id==='homeFiles'?'home':'products')&&f.is_published!==false);const i=Array.prototype.indexOf.call(host.children,card);const f=list[i];if(!f)return;
+   const host=card.closest('#homeFiles,#productList');const list=(cachedFiles||[]).filter(f=>f.placement===(host.id==='homeFiles'?'home':'products')&&f.is_published!==false);const f=list.find(item=>item.id===card.dataset.fileId);if(!f)return;
    const el=document.createElement('div');el.className='product-social';el.dataset.productSocial=f.id;
    el.innerHTML='<div class="social-actions"><button type="button" class="social-heart" aria-label="لایک محصول">♡</button><span class="social-count">۰</span><button type="button" class="social-open">💬 نظرات (<span class="social-comments-count">۰</span>)</button></div><div class="social-panel" hidden><div class="social-comments-list"></div><form class="social-comment-form"><input maxlength="500" required placeholder="نظر خود را بنویسید"><button type="submit" class="btn-green">ارسال</button></form></div>';
    card.querySelector('.body')?.append(el);updateSocial(el);
@@ -26,6 +26,7 @@
  }
  const observer=new MutationObserver(()=>{if([...document.querySelectorAll('#homeFiles .card,#productList .card')].some(card=>!card.querySelector('[data-product-social]')))decorate();});
  ['homeFiles','productList'].forEach(id=>{const el=document.getElementById(id);if(el)observer.observe(el,{childList:true});});
+ window.refreshProductSocialCards=decorate;
  decorate();refreshSocial();setInterval(refreshSocial,30000);
 
 })();
