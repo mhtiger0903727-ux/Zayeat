@@ -83,6 +83,9 @@ body.admin-compact .manage-item,body.admin-compact .folder{padding:8px;margin:7p
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <link rel="stylesheet" href="./assets/modern-app.css?v=7">
+<style>
+.product-social{border-top:1px solid #e3e9e5;margin-top:12px;padding-top:8px}.social-actions{display:flex;align-items:center;gap:9px}.social-heart{background:none;color:#4b5550;font-size:30px;padding:0 5px}.social-heart.liked{color:#e53935}.social-open{background:#e8f5e9;color:#1b5e20;font-size:.86rem}.social-panel{margin-top:10px}.social-comments-list{max-height:220px;overflow:auto}.social-comments-list p{border-bottom:1px solid #eee;padding:5px 0}.social-comments-list small{color:#777;margin-right:8px}.social-comment-form{display:flex;gap:6px}.social-comment-form input{min-width:0}.request-item-count,.request-product-select{width:100%}.request-subtotal{display:block;color:#246b34}.request-estimated-total{padding:12px;border:1px solid #b4d9bd;background:#f0f9f1;border-radius:12px;font-weight:700;margin:12px 0}
+</style>
 </head>
 <body>
 <div class="header"><div class="header-topbar" id="publicNav"><div class="nav-container"><button class="hamburger" type="button" aria-label="باز کردن منو" aria-expanded="false" onclick="toggleMenu('publicMenu',this)"><span></span><span></span><span></span></button><div class="menu-popover" id="publicMenu"><a href="#" onclick="showPage('home');return false">صفحه اصلی</a><a href="#" onclick="showPage('register');return false">ثبت نام</a><a href="#" onclick="showPage('products');return false">محصولات و قیمت‌ها</a><a href="#" onclick="showPage('contact');return false">ارتباط با مدیران</a><a href="#" onclick="enterPanel();return false">پنل مدیریت</a></div></div><div id="liveClock" class="clock-line" aria-live="polite">در حال دریافت تاریخ و ساعت…</div></div><h1>به سایت رسمی الو ضایعات خوش آمدید</h1></div>
@@ -702,4 +705,5 @@ $('passwordForm').addEventListener('submit',async e=>{e.preventDefault();const {
  })).observe(document.documentElement,{subtree:true,childList:true,characterData:true});
 })();
 </script>
+<script src="./assets/product-features.js?v=1" defer></script>
 </body></html>
