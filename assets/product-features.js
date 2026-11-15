@@ -15,18 +15,18 @@ function startProductSocial(){
  function updateSocial(el){const id=el.dataset.productSocial;const mine=likes.some(x=>x.product_id===id&&x.voter_id===voter);el.querySelector('.social-heart').textContent=mine?'♥':'♡';el.querySelector('.social-heart').classList.toggle('liked',mine);el.querySelector('.social-count').textContent=fmt(likes.filter(x=>x.product_id===id).length);const myDislike=dislikes.some(x=>x.product_id===id&&x.voter_id===voter);el.querySelector('.social-dislike').classList.toggle('disliked',myDislike);el.querySelector('.social-dislike-count').textContent=fmt(dislikes.filter(x=>x.product_id===id).length);const cs=comments.filter(x=>x.product_id===id);el.querySelector('.social-comments-count').textContent=fmt(cs.length);el.querySelector('.social-comments-list').innerHTML=cs.map(c=>'<p>'+escapeHTML(c.body)+' <small>'+new Date(c.created_at).toLocaleDateString('fa-IR')+'</small></p>').join('')||'<p class="muted">هنوز نظری ثبت نشده است.</p>';}
  function decorate(){
   document.querySelectorAll('#homeFiles .card,#productList .card').forEach(card=>{
-   if(card.querySelector('[data-product-social]'))return;
+   if(card.querySelector('[data-product-social][data-social-initialized]'))return;
    const productId=card.dataset.fileId;if(!productId)return;const f={id:productId};
-   const el=document.createElement('div');el.className='product-social';el.dataset.productSocial=f.id;
+   const el=card.querySelector('[data-product-social]')||document.createElement('div');el.className='product-social';el.dataset.productSocial=f.id;el.dataset.socialInitialized='true';
    el.innerHTML='<div class="social-actions"><button type="button" class="social-heart" aria-label="لایک محصول">♡</button><span class="social-count">۰</span><button type="button" class="social-open">💬 نظرات (<span class="social-comments-count">۰</span>)</button></div><div class="social-panel" hidden><div class="social-comments-list"></div><form class="social-comment-form"><input maxlength="500" required placeholder="نظر خود را بنویسید"><button type="submit" class="btn-green">ارسال</button></form></div>';
-   card.querySelector('.body')?.append(el);updateSocial(el);
+   if(!el.isConnected)card.querySelector('.body')?.append(el);updateSocial(el);
    el.querySelector('.social-open').onclick=()=>{const p=el.querySelector('.social-panel');p.hidden=!p.hidden;};
    el.querySelector('.social-heart').onclick=async()=>{const btn=el.querySelector('.social-heart');btn.disabled=true;try{const {error}=await sb.rpc('toggle_product_like',{p_product_id:f.id,p_voter_id:voter,p_token:token});if(error)throw error;await refreshSocial();}catch(e){alert('ثبت لایک ناموفق بود: '+e.message)}finally{btn.disabled=false;}};
    el.querySelector('.social-dislike').onclick=async()=>{const btn=el.querySelector('.social-dislike');btn.disabled=true;try{const {error}=await sb.rpc('toggle_product_dislike',{p_product_id:f.id,p_voter_id:voter,p_token:token});if(error)throw error;await refreshSocial();}catch(e){alert('ثبت دیسلایک ناموفق بود: '+e.message)}finally{btn.disabled=false;}};
    el.querySelector('form').onsubmit=async ev=>{ev.preventDefault();const input=el.querySelector('input'),body=input.value.trim();if(!body)return;const {error}=await sb.from('product_comments').insert({product_id:f.id,voter_id:voter,body});if(error){alert('ثبت نظر ناموفق بود: '+error.message);return;}input.value='';await refreshSocial();};
   });
  }
- const observer=new MutationObserver(()=>{if([...document.querySelectorAll('#homeFiles .card,#productList .card')].some(card=>!card.querySelector('[data-product-social]')))decorate();});
+ const observer=new MutationObserver(()=>{if([...document.querySelectorAll('#homeFiles .card,#productList .card')].some(card=>!card.querySelector('[data-product-social][data-social-initialized]')))decorate();});
  ['homeFiles','productList'].forEach(id=>{const el=document.getElementById(id);if(el)observer.observe(el,{childList:true});});
  window.refreshProductSocialCards=decorate;
  decorate();refreshSocial();setInterval(refreshSocial,30000);
