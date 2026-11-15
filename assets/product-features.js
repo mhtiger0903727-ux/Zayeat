@@ -1,5 +1,6 @@
 /* Product reactions and estimated scrap request pricing - 2026-11 */
-(()=>{
+function startProductSocial(){
+ const sb=window.productSocialSb;
  const voter=localStorage.getItem('zayeat_product_voter')||crypto.randomUUID();
  localStorage.setItem('zayeat_product_voter',voter);
  const tokenKey='zayeat_product_owner_token';const token=localStorage.getItem(tokenKey)||crypto.randomUUID();localStorage.setItem(tokenKey,token);
@@ -30,4 +31,5 @@
  window.refreshProductSocialCards=decorate;
  decorate();refreshSocial();setInterval(refreshSocial,30000);
 
-})();
+}
+if(window.productSocialSb)startProductSocial();else window.addEventListener('product-social-ready',startProductSocial,{once:true});
