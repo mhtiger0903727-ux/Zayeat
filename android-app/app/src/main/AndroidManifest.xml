@@ -9,7 +9,7 @@
         android:allowBackup="true"
         android:icon="@drawable/zayeat_truck"
         android:roundIcon="@drawable/zayeat_truck"
-        android:label="ضایعات خشک"
+        android:label="الو ضایعات"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="false">
