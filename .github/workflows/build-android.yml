@@ -1,4 +1,4 @@
-name: Build Zayeat Android APK
+name: Build Alo Zayeat Android APK
 # Triggered build requested for downloadable debug APK.
 
 on:
@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -46,3 +46,15 @@ jobs:
           path: android-app/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30
+
+      - name: Publish downloadable APK to GitHub Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk ../alo-zayeat.apk
+          cd ..
+          if gh release view android-latest >/dev/null 2>&1; then
+            gh release upload android-latest alo-zayeat.apk --clobber
+          else
+            gh release create android-latest alo-zayeat.apk --title "الو ضایعات - نسخه اندروید" --notes "آخرین نسخه قابل دانلود برنامه اندروید الو ضایعات" --target "$GITHUB_SHA"
+          fi
