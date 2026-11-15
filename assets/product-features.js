@@ -1,18 +1,18 @@
 /* Product reactions and estimated scrap request pricing - 2026-11 */
 function startProductSocial(){
  const sb=window.productSocialSb;
- const voter=localStorage.getItem('zayeat_product_voter')||crypto.randomUUID();
+ const voter=localStorage.getItem('zayeat_product_voter')||(crypto.randomUUID?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const n=Math.random()*16|0;return(c==='x'?n:(n&3|8)).toString(16)}));
  localStorage.setItem('zayeat_product_voter',voter);
- const tokenKey='zayeat_product_owner_token';const token=localStorage.getItem(tokenKey)||crypto.randomUUID();localStorage.setItem(tokenKey,token);
+ const tokenKey='zayeat_product_owner_token';const token=localStorage.getItem(tokenKey)||(crypto.randomUUID?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const n=Math.random()*16|0;return(c==='x'?n:(n&3|8)).toString(16)}));localStorage.setItem(tokenKey,token);
  const fmt=n=>Math.round(n).toLocaleString('fa-IR');
  const parsePrice=v=>{let s=String(v||'').replace(/[۰-۹]/g,c=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(c)).replace(/[٠-٩]/g,c=>'٠١٢٣٤٥٦٧٨٩'.indexOf(c));let m=s.replace(/[,٬،\s]/g,'').match(/\d+(?:\.\d+)?/);return m?Number(m[0]):0};
  const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const priceOf=f=>parsePrice(f.price);
- let likes=[],dislikes=[],comments=[];
+ let likes=[],comments=[];
  async function refreshSocial(){
-  try{const [a,d,b]=await Promise.all([sb.from('product_likes').select('product_id,voter_id'),sb.from('product_dislikes').select('product_id,voter_id'),sb.from('product_comments').select('id,product_id,body,created_at').order('created_at',{ascending:false}).limit(1000)]);if(a.error)throw a.error;if(d.error)throw d.error;if(b.error)throw b.error;likes=a.data||[];dislikes=d.data||[];comments=b.data||[];document.querySelectorAll('[data-product-social]').forEach(updateSocial);}catch(e){console.warn('Product interactions:',e.message);}
+  try{const [a,b]=await Promise.all([sb.from('product_likes').select('product_id,voter_id'),sb.from('product_comments').select('id,product_id,body,created_at').order('created_at',{ascending:false}).limit(1000)]);if(a.error)throw a.error;if(b.error)throw b.error;likes=a.data||[];comments=b.data||[];document.querySelectorAll('[data-product-social]').forEach(updateSocial);}catch(e){console.warn('Product interactions:',e.message);}
  }
- function updateSocial(el){const id=el.dataset.productSocial;const mine=likes.some(x=>x.product_id===id&&x.voter_id===voter);el.querySelector('.social-heart').textContent=mine?'♥':'♡';el.querySelector('.social-heart').classList.toggle('liked',mine);el.querySelector('.social-count').textContent=fmt(likes.filter(x=>x.product_id===id).length);const myDislike=dislikes.some(x=>x.product_id===id&&x.voter_id===voter);el.querySelector('.social-dislike').classList.toggle('disliked',myDislike);el.querySelector('.social-dislike-count').textContent=fmt(dislikes.filter(x=>x.product_id===id).length);const cs=comments.filter(x=>x.product_id===id);el.querySelector('.social-comments-count').textContent=fmt(cs.length);el.querySelector('.social-comments-list').innerHTML=cs.map(c=>'<p>'+escapeHTML(c.body)+' <small>'+new Date(c.created_at).toLocaleDateString('fa-IR')+'</small></p>').join('')||'<p class="muted">هنوز نظری ثبت نشده است.</p>';}
+ function updateSocial(el){const id=el.dataset.productSocial;if(!el.querySelector('.social-heart'))return;const mine=likes.some(x=>x.product_id===id&&x.voter_id===voter);el.querySelector('.social-heart').textContent=mine?'♥':'♡';el.querySelector('.social-heart').classList.toggle('liked',mine);el.querySelector('.social-heart').setAttribute('aria-pressed',String(mine));el.querySelector('.social-heart').setAttribute('aria-label',mine?'برداشتن لایک':'لایک کردن');el.querySelector('.social-count').textContent=fmt(likes.filter(x=>x.product_id===id).length);const myDislike=dislikes.some(x=>x.product_id===id&&x.voter_id===voter);const cs=comments.filter(x=>x.product_id===id);el.querySelector('.social-comments-count').textContent=fmt(cs.length);el.querySelector('.social-comments-list').innerHTML=cs.map(c=>'<p>'+escapeHTML(c.body)+' <small>'+new Date(c.created_at).toLocaleDateString('fa-IR')+'</small></p>').join('')||'<p class="muted">هنوز نظری ثبت نشده است.</p>';}
  function decorate(){
   document.querySelectorAll('#homeFiles .card,#productList .card').forEach(card=>{
    if(card.querySelector('[data-product-social][data-social-initialized]'))return;
@@ -22,7 +22,7 @@ function startProductSocial(){
    if(!el.isConnected)card.querySelector('.body')?.append(el);updateSocial(el);
    el.querySelector('.social-open').onclick=()=>{const p=el.querySelector('.social-panel');p.hidden=!p.hidden;};
    el.querySelector('.social-heart').onclick=async()=>{const btn=el.querySelector('.social-heart');btn.disabled=true;try{const {error}=await sb.rpc('toggle_product_like',{p_product_id:f.id,p_voter_id:voter,p_token:token});if(error)throw error;await refreshSocial();}catch(e){alert('ثبت لایک ناموفق بود: '+e.message)}finally{btn.disabled=false;}};
-   el.querySelector('.social-dislike').onclick=async()=>{const btn=el.querySelector('.social-dislike');btn.disabled=true;try{const {error}=await sb.rpc('toggle_product_dislike',{p_product_id:f.id,p_voter_id:voter,p_token:token});if(error)throw error;await refreshSocial();}catch(e){alert('ثبت دیسلایک ناموفق بود: '+e.message)}finally{btn.disabled=false;}};
+   
    el.querySelector('form').onsubmit=async ev=>{ev.preventDefault();const input=el.querySelector('input'),body=input.value.trim();if(!body)return;const {error}=await sb.from('product_comments').insert({product_id:f.id,voter_id:voter,body});if(error){alert('ثبت نظر ناموفق بود: '+error.message);return;}input.value='';await refreshSocial();};
   });
  }
