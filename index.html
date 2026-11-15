@@ -130,6 +130,7 @@ function getStoryVoterId(){
 }
 const storyVoterId=getStoryVoterId();
 const sb=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false,flowType:'pkce',storage:window.sessionStorage},global:{headers:{'x-story-voter-id':storyVoterId}}});
+window.productSocialSb=sb;window.dispatchEvent(new Event('product-social-ready'));
 const $=id=>document.getElementById(id);
 let historyStack=['home'];let currentUser=null;let currentRole=null;let currentUsername='';let currentPermissions={upload:true,goods:true,people:true,requests:true,files:true,stories:true};let cachedFiles=[];
 const panelIds=['panelLogin','panelManagerSignup','panelHome','panelUpload','panelGoods','panelPeople','panelRequests','panelFiles','panelAdmins','panelProfile','panelStories','panelPassword'];
@@ -730,7 +731,7 @@ $('passwordForm').addEventListener('submit',async e=>{e.preventDefault();const {
  })).observe(document.documentElement,{subtree:true,childList:true,characterData:true});
 })();
 </script>
-<script src="./assets/product-features.js?v=5" defer></script>
+<script src="./assets/product-features.js?v=6" defer></script>
 <script>
 async function downloadLatestAndroidApk(){
  const button=document.getElementById('downloadAndroidApk'),status=document.getElementById('androidDownloadStatus');
