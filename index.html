@@ -126,7 +126,7 @@ body.admin-compact .manage-item,body.admin-compact .folder{padding:8px;margin:7p
 .story-audience-panel{border-radius:20px 20px 0 0!important;bottom:0!important;left:0!important;right:0!important;max-height:65vh!important}
 .story-audience-row{display:flex;align-items:center;gap:10px}
 @media(max-width:480px){.story-viewer-controls{padding:9px 14px 15px!important}}
-</style></head>
+ .story-viewer-controls #storyAudienceBtn:disabled{opacity:1!important;cursor:default!important}</style></head>
 <body>
 <div class="header"><div class="header-topbar" id="publicNav"><div class="nav-container"><button class="hamburger" type="button" aria-label="باز کردن منو" aria-expanded="false" onclick="toggleMenu('publicMenu',this)"><span></span><span></span><span></span></button><div class="menu-popover" id="publicMenu"><a href="#" onclick="showPage('home');return false">صفحه اصلی</a><a href="#" onclick="showPage('register');return false">ثبت نام</a><a href="#" onclick="showPage('products');return false">محصولات و قیمت‌ها</a><a href="#" onclick="showPage('contact');return false">ارتباط با مدیران</a><a href="#" onclick="enterPanel();return false">پنل مدیریت</a></div></div><div id="liveClock" class="clock-line" aria-live="polite">در حال دریافت تاریخ و ساعت…</div></div><h1>به سایت رسمی الو ضایعات خوش آمدید</h1></div>
 <div id="home" class="page active"><h2>صفحه اصلی</h2><section class="app-download-section" aria-label="دریافت برنامه اندروید"><strong>📱 برنامه اندروید الو ضایعات</strong><p>دریافت آخرین نسخه منتشرشده اندروید</p><a class="btn-green app-download-link" href="https://github.com/mhtiger0903727-ux/Zayeat/releases/download/android-latest/alo-zayeat.apk" download>⬇ دانلود مستقیم برنامه</a><small id="androidDownloadStatus" aria-live="polite">پس از تکمیل ساخت و انتشار APK، دانلود با لمس دکمه آغاز می‌شود.</small></section><details class="layout-picker"><summary title="تغییر چیدمان" aria-label="تغییر چیدمان"><span class="layout-glyph">▦</span></summary><div class="layout-options" role="group" aria-label="چیدمان صفحه اصلی"><button type="button" class="layout-option" data-layout="1" title="شبکه‌ای" aria-label="شبکه‌ای" onclick="setLayout('home',1)">▦</button><button type="button" class="layout-option" data-layout="2" title="فهرستی" aria-label="فهرستی" onclick="setLayout('home',2)">☷</button><button type="button" class="layout-option" data-layout="3" title="شبکه‌ای فشرده" aria-label="شبکه‌ای فشرده" onclick="setLayout('home',3)">▤</button><button type="button" class="layout-option" data-layout="4" title="نمای عریض" aria-label="نمای عریض" onclick="setLayout('home',4)">▱</button></div></details><p>به وب‌سایت رسمی الو ضایعات خوش آمدید.</p><div id="homeStories" class="admin-stories-strip" aria-label="استوری مدیران"></div><div id="homeFiles" class="products"></div></div>
@@ -256,17 +256,20 @@ async function reactToStory(){
 let audienceVersion=0;
 async function storyAudience(story){
  const version=++audienceVersion,owner=!!currentUser&&currentUser.id===story.user_id;
- $('storyAudienceBtn').classList.toggle('hidden',!owner);$('storyAudiencePanel').hidden=true;
+ $('storyAudienceBtn').classList.remove('hidden');$('storyAudienceBtn').disabled=!owner;$('storyAudienceBtn').setAttribute('aria-label',owner?'نمایش فهرست بینندگان':'تعداد بازدید استوری');$('storyAudiencePanel').hidden=true;$('storyViewCount').textContent='…';
  try{
   const view=await sb.rpc('record_story_view',{p_story_id:story.id,p_voter_id:storyVoterId});if(view.error)throw view.error;
+  const countResult=await sb.rpc('story_view_count',{p_story_id:story.id});if(countResult.error)throw countResult.error;
+  if(version!==audienceVersion)return;
+  $('storyViewCount').textContent=Number(countResult.data||0).toLocaleString('fa-IR');
   if(!owner)return;
   const {data,error}=await sb.rpc('get_story_audience',{p_story_id:story.id});if(error)throw error;
   if(version!==audienceVersion)return;
   $('storyViewCount').textContent=(data||[]).length.toLocaleString('fa-IR');
   $('storyAudienceList').innerHTML=(data||[]).map(v=>'<div class="story-audience-row">👤 '+(v.viewer_user_id?'کاربر عضو':'مهمان')+' · '+esc((v.viewer_user_id||v.voter_id).slice(0,8))+' <small>'+(v.reaction==='like'?'❤️ لایک':v.reaction==='dislike'?'👎 دیسلایک':'')+' · '+new Date(v.viewed_at).toLocaleString('fa-IR')+'</small></div>').join('')||'هنوز بازدیدی ثبت نشده است.';
- }catch(e){console.warn('Story audience',e);if(owner&&version===audienceVersion)$('storyAudienceList').textContent='دریافت بینندگان ناموفق بود: '+errText(e);}
+ }catch(e){console.warn('Story audience',e);if(version===audienceVersion){$('storyViewCount').textContent='—';if(owner)$('storyAudienceList').textContent='دریافت بینندگان ناموفق بود: '+errText(e);}}
 }
-$('storyAudienceBtn').onclick=()=>{$('storyAudiencePanel').hidden=!$('storyAudiencePanel').hidden;};
+$('storyAudienceBtn').onclick=()=>{if($('storyAudienceBtn').disabled)return;$('storyAudiencePanel').hidden=!$('storyAudiencePanel').hidden;};
 $('storyAudienceClose').onclick=()=>{$('storyAudiencePanel').hidden=true;};
 function renderStoryViewer(){
  const group=publicStoryGroups[storyGroupIndex];if(!group)return closeStoryViewer();
