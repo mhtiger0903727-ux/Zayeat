@@ -1,0 +1,11 @@
+{
+  "name": "الو ضایعات",
+  "short_name": "الو ضایعات",
+  "lang": "fa",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#104c2b"
+}
