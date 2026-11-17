@@ -159,6 +159,8 @@ body.admin-compact .manage-item,body.admin-compact .folder{padding:8px;margin:7p
 <div id="storyViewer" class="story-viewer" aria-hidden="true"><div class="story-viewer-panel"><div class="story-viewer-top"><div id="storyProgress" class="story-progress"><span id="storyProgressFill"></span></div><button type="button" id="storyClose" aria-label="بستن">×</button></div><div id="storyOwner" class="story-owner"></div><div id="storyMedia" class="story-media"></div><p id="storyCaption" class="story-caption"></p><div class="story-viewer-controls"><div class="story-reactions"><button type="button" id="storyLike" class="story-instagram-heart" aria-label="پسندیدن استوری" aria-pressed="false"><svg id="storyHeartIcon" viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z"/></svg><span id="storyLikeCount">۰</span></button></div><button type="button" id="storyAudienceBtn" class="hidden" aria-label="نمایش بینندگان استوری"><span class="story-viewer-avatars">👤</span><span class="story-views-text"><span id="storyViewCount">۰</span> بازدید</span><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div></div></div><div id="storyAudiencePanel" class="story-audience-panel" hidden><button type="button" id="storyAudienceClose">بستن ×</button><strong>بینندگان استوری</strong><div id="storyAudienceList"></div></div><div id="siteNavOverlay" class="site-nav-overlay" hidden><div class="site-nav-header"><strong>🧭 مسیریاب فارسی الو ضایعات</strong><button type="button" onclick="stopVoiceNavigation();document.getElementById('siteNavOverlay').hidden=true">بستن ×</button></div><p id="siteNavDetails">در حال محاسبه مسیر...</p><div id="siteNavMap"></div><button type="button" onclick="stopVoiceNavigation();document.getElementById('siteNavOverlay').hidden=true">پایان مسیریابی</button></div><div class="footer"><p>با مدیریت محمد حسین تقی پور و محمد هوشیار</p></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script type="module">
+// Initialize price cache before any asynchronous rendering or upload callbacks.
+let publicWastePrices=[];
 const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2').catch(() => import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'));
 const SUPABASE_URL='https://bgmdwxksoiupjaounndm.supabase.co';
 const SUPABASE_KEY='sb_publishable_yVdCyd9j9IAKfxm9yjeUjg_WX-ZHoBJ';
@@ -857,7 +859,6 @@ $('newsPublishForm').onsubmit=async e=>{
 void loadSiteNews();
 
 
-let publicWastePrices=[];
 function productPriceName(f){return String(f.caption||f.original_name||'').trim();}
 function refreshPriceProductOptions(){
  const select=$('priceName');if(!select)return;
