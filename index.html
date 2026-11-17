@@ -872,7 +872,7 @@ function refreshPriceProductOptions(){
 async function loadPriceProductOptions(){
  const select=$('priceName');if(!select)return;
  try{
-  const {data,error}=await sb.from('site_files').select('id,caption,original_name,placement,is_published').eq('placement','products').order('created_at',{ascending:false});
+  const {data,error}=await sb.from('site_files').select('*').eq('is_published',true).order('created_at',{ascending:false});
   if(error)throw error;
   const byId=new Map((cachedFiles||[]).map(f=>[String(f.id),f]));
   (data||[]).filter(f=>f.is_published!==false).forEach(f=>byId.set(String(f.id),f));
