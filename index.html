@@ -931,7 +931,7 @@ async function loadAdminChats(){
  const box=$('adminChatThreads');if(error){box.textContent=errText(error);return;}
  if(!data?.length){box.textContent='هنوز پیامی از مشتریان ثبت‌نام‌شده دریافت نشده است.';return;}
  const ids=[...new Set(data.map(c=>c.customer_id).filter(Boolean))];
- const customerResult=await sb.from('customers').select('id,first_name,last_name,file_no').in('id',ids);
+ const customerResult=await sb.rpc('admin_support_customers');
  if(customerResult.error){box.textContent='دریافت مشخصات مشتریان ناموفق بود: '+errText(customerResult.error);return;}
  const customerMap=new Map((customerResult.data||[]).map(c=>[c.id,c]));
  box.innerHTML=data.map(c=>{const customer=customerMap.get(c.customer_id);return '<article class="chat-thread"><button type="button" class="chat-thread-toggle" data-chat-open="'+esc(c.id)+'">'+(customer?esc(customer.first_name+' '+customer.last_name)+' — شماره پرونده '+esc(customer.file_no):'پرونده نامشخص')+'</button><small>'+new Date(c.updated_at).toLocaleString('fa-IR')+'</small><div id="chatDetails-'+esc(c.id)+'" hidden><div data-thread-messages="'+esc(c.id)+'"></div><form data-thread-reply="'+esc(c.id)+'"><input required maxlength="2000" placeholder="پاسخ مدیر"><button type="submit">ارسال پاسخ</button></form></div></article>';}).join('');
