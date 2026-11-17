@@ -743,18 +743,6 @@ $('passwordForm').addEventListener('submit',async e=>{e.preventDefault();const {
  setTimeout(finish,4000);
  window.addEventListener('load',()=>setTimeout(finish,4000),{once:true});
 
- const home=$('home');
- if(home&&!$('zayeatWelcome')){
-  const hero=document.createElement('section');hero.id='zayeatWelcome';hero.innerHTML='<div class="welcome-copy"><h2>ضایعاتت رو به ارزش تبدیل کن</h2><p>ثبت درخواست، مشاهده قیمت‌ها و ارتباط آسان با مجموعه الو ضایعات</p><div class="welcome-actions"><button type="button" id="zQuickRegister">ثبت درخواست</button><button type="button" class="secondary" id="zQuickProducts">مشاهده قیمت‌ها</button></div></div><img class="welcome-art z-vector-truck" src="./assets/recycling-pickup.webp?v=2" alt="وانت حمل الو ضایعات">';
-  const h2=home.querySelector('h2');const storyStrip=$('homeStories');if(storyStrip){h2?.after(storyStrip);storyStrip.after(hero);}else h2?.after(hero);
-  const shortcuts=document.createElement('section');shortcuts.id='zayeatShortcuts';shortcuts.innerHTML='<button class="z-shortcut" id="zShortcutRegister"><span class="z-ico">📝</span><span><b>ثبت‌نام مشتری</b><small>ایجاد پرونده جدید</small></span></button><button class="z-shortcut" id="zShortcutPrices"><span class="z-ico">♻️</span><span><b>محصولات و قیمت‌ها</b><small>آخرین قیمت‌های ثبت‌شده</small></span></button><button class="z-shortcut" id="zShortcutContact"><span class="z-ico">☎️</span><span><b>ارتباط با مدیران</b><small>پشتیبانی و پاسخ‌گویی</small></span></button><button class="z-shortcut" id="zShortcutAdmin"><span class="z-ico">🔐</span><span><b>ورود مدیران</b><small>پنل مدیریت مجموعه</small></span></button>';
-  hero.after(shortcuts);
-  const go=id=>window.showPage?.(id);
-  ['zQuickRegister','zShortcutRegister'].forEach(id=>$(id)?.addEventListener('click',()=>go('register')));
-  ['zQuickProducts','zShortcutPrices'].forEach(id=>$(id)?.addEventListener('click',()=>go('products')));
-  $('zShortcutContact')?.addEventListener('click',()=>go('contact'));
-  $('zShortcutAdmin')?.addEventListener('click',()=>window.enterPanel?.());
- }
  const admin=$('adminMenu');
  if(admin&&!$('adminQuickLabel')){
   const label=document.createElement('p');label.id='adminQuickLabel';label.className='muted';label.textContent='همه ابزارهای مدیریت در دسترس شماست؛ یکی را انتخاب کنید.';
