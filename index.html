@@ -904,8 +904,8 @@ const babolAreaExtents=[
  [[36.24,52.68],[36.55,53.03]]
 ];
 function showBabolAreaSector(){
- const index=Number($('areaMapSector').value);
- if(!window.L){$('babolAreaMapCaption').textContent='نقشه بارگذاری نشد؛ اتصال اینترنت یا دسترسی به سرویس نقشه را بررسی کنید.';return;}
+ const index=Number(document.getElementById('areaMapSector').value);
+ if(!window.L){document.getElementById('babolAreaMapCaption').textContent='نقشه بارگذاری نشد؛ اتصال اینترنت یا دسترسی به سرویس نقشه را بررسی کنید.';return;}
  if(!babolAreaMap){
   babolAreaMap=L.map('babolAreaMap',{scrollWheelZoom:false}).setView(babolAreaCentre,10);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(babolAreaMap);
@@ -913,21 +913,21 @@ function showBabolAreaSector(){
  if(babolAreaLayer)babolAreaMap.removeLayer(babolAreaLayer);
  babolAreaLayer=L.rectangle(babolAreaExtents[index],{color:'#1976d2',weight:3,fillColor:'#2196f3',fillOpacity:.23}).addTo(babolAreaMap);
  babolAreaMap.fitBounds(babolAreaLayer.getBounds(),{padding:[24,24]});
- $('babolAreaMapCaption').textContent=babolSectorNames[index]+' — محدوده نمایشی تقریبی؛ بخش‌های بیرون از محدوده تحت پوشش بابل جزو خدمات نیستند.';
+ document.getElementById('babolAreaMapCaption').textContent=babolSectorNames[index]+' — محدوده نمایشی تقریبی؛ بخش‌های بیرون از محدوده تحت پوشش بابل جزو خدمات نیستند.';
  setTimeout(()=>{babolAreaMap?.invalidateSize();babolAreaMap?.fitBounds(babolAreaLayer.getBounds(),{padding:[24,24]});},250);
 }
-document.querySelectorAll('[data-area-sector]').forEach(btn=>btn.addEventListener('click',()=>{$('areaMapSector').value=btn.dataset.areaSector;showBabolAreaSector();document.getElementById('babolAreaMap').scrollIntoView({behavior:'smooth',block:'center'});}));
-$('areaMapSector').addEventListener('change',showBabolAreaSector);
+document.querySelectorAll('[data-area-sector]').forEach(btn=>btn.addEventListener('click',()=>{document.getElementById('areaMapSector').value=btn.dataset.areaSector;showBabolAreaSector();document.getElementById('babolAreaMap').scrollIntoView({behavior:'smooth',block:'center'});}));
+document.getElementById('areaMapSector').addEventListener('change',showBabolAreaSector);
 const babolSectorNames=['','بخش یک — شمال‌غرب','بخش دو — شمال‌شرق','بخش سه — جنوب‌غرب','بخش چهار — جنوب‌شرق'];
 function babolSectorForCoordinates(lat,lng){
  // Operational quadrants around Babol city centre; not an official administrative boundary.
  const centreLat=36.55,centreLng=52.68;
  return lat>=centreLat?(lng<centreLng?1:2):(lng<centreLng?3:4);
 }
-$('areaLookupForm').addEventListener('submit',e=>{
+document.getElementById('areaLookupForm').addEventListener('submit',e=>{
  e.preventDefault();
- const lat=Number($('areaLookupLat').value),lng=Number($('areaLookupLng').value);
- $('areaLookupResult').textContent=Number.isFinite(lat)&&Number.isFinite(lng)?'حوزه پیشنهادی: '+babolSectorNames[babolSectorForCoordinates(lat,lng)]+' — تأیید قرارگیری در محدوده پوشش لازم است.':'مختصات معتبر وارد کنید.';
+ const lat=Number(document.getElementById('areaLookupLat').value),lng=Number(document.getElementById('areaLookupLng').value);
+ document.getElementById('areaLookupResult').textContent=Number.isFinite(lat)&&Number.isFinite(lng)?'حوزه پیشنهادی: '+babolSectorNames[babolSectorForCoordinates(lat,lng)]+' — تأیید قرارگیری در محدوده پوشش لازم است.':'مختصات معتبر وارد کنید.';
 });
 async function loadDrivers(){
  const box=$('driversList');box.textContent='در حال دریافت فهرست رانندگان...';
