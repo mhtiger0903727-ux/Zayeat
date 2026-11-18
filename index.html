@@ -188,24 +188,72 @@ window.toggleMenu=(id,button)=>{const menu=$(id);const opening=!menu?.classList.
 var babolAreaMap=null,babolAreaLayer=null;
 const babolAreaCentre=[36.55,52.68];
 // Display-only quadrant geometry; not official district or service-area borders.
-const babolAreaExtents=[
- null,
- [[36.55,52.34],[36.81,52.68]],
- [[36.55,52.68],[36.81,53.03]],
- [[36.24,52.34],[36.55,52.68]],
- [[36.24,52.68],[36.55,53.03]]
+// Four operational sectors are clipped to the EXACT same GeoJSON used on registration.
+const babolSectorBounds=[
+ null,{latMin:36.55,latMax:90,lngMin:-180,lngMax:52.68},
+ {latMin:36.55,latMax:90,lngMin:52.68,lngMax:180},
+ {latMin:-90,latMax:36.55,lngMin:-180,lngMax:52.68},
+ {latMin:-90,latMax:36.55,lngMin:52.68,lngMax:180}
 ];
-function showBabolAreaSector(){
+function clipBabolRing(ring,box){
+ let points=ring.map(p=>[p[0],p[1]]);
+ const edges=[
+  {axis:0,value:box.lngMin,keep:v=>v>=box.lngMin},
+  {axis:0,value:box.lngMax,keep:v=>v<=box.lngMax},
+  {axis:1,value:box.latMin,keep:v=>v>=box.latMin},
+  {axis:1,value:box.latMax,keep:v=>v<=box.latMax}
+ ];
+ for(const edge of edges){
+  if(!points.length)break;
+  const next=[];
+  for(let i=0;i<points.length;i++){
+   const curr=points[i],prev=points[(i+points.length-1)%points.length];
+   const ci=edge.keep(curr[edge.axis]),pi=edge.keep(prev[edge.axis]);
+   if(ci!==pi){
+    const t=(edge.value-prev[edge.axis])/(curr[edge.axis]-prev[edge.axis]);
+    next.push([prev[0]+t*(curr[0]-prev[0]),prev[1]+t*(curr[1]-prev[1])]);
+   }
+   if(ci)next.push(curr);
+  }
+  points=next;
+ }
+ if(points.length<3)return null;
+ const first=points[0],last=points[points.length-1];
+ if(first[0]!==last[0]||first[1]!==last[1])points.push([...first]);
+ return points;
+}
+function clippedBabolGeoJSON(boundary,box){
+ const features=[];
+ for(const feature of boundary.features||[]){
+  const g=feature.geometry;
+  if(!g)continue;
+  const polys=g.type==='MultiPolygon'?g.coordinates:g.type==='Polygon'?[g.coordinates]:[];
+  for(const rings of polys){
+   const outer=clipBabolRing(rings[0],box);
+   if(!outer)continue;
+   const holes=rings.slice(1).map(r=>clipBabolRing(r,box)).filter(Boolean);
+   features.push({type:'Feature',properties:{},geometry:{type:'Polygon',coordinates:[outer,...holes]}});
+  }
+ }
+ return {type:'FeatureCollection',features};
+}
+async function showBabolAreaSector(){
  const index=Number(document.getElementById('areaMapSector').value);
- if(!window.L){document.getElementById('babolAreaMapCaption').textContent='نقشه بارگذاری نشد؛ اتصال اینترنت یا دسترسی به سرویس نقشه را بررسی کنید.';return;}
+ const caption=document.getElementById('babolAreaMapCaption');
+ if(!window.L){caption.textContent='سرویس نقشه بارگذاری نشد؛ اتصال اینترنت را بررسی کنید.';return;}
+ caption.textContent='در حال دریافت محدوده ثبت‌نام بابل...';
+ const boundary=await serviceBoundaryPromise;
+ if(!boundary){caption.textContent='فایل محدوده ثبت‌نام بابل بارگذاری نشد. لطفاً دوباره تلاش کنید.';return;}
  if(!babolAreaMap){
   babolAreaMap=L.map('babolAreaMap',{scrollWheelZoom:false}).setView(babolAreaCentre,10);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(babolAreaMap);
  }
  if(babolAreaLayer)babolAreaMap.removeLayer(babolAreaLayer);
- babolAreaLayer=L.rectangle(babolAreaExtents[index],{color:'#1976d2',weight:3,fillColor:'#2196f3',fillOpacity:.23}).addTo(babolAreaMap);
+ const clipped=clippedBabolGeoJSON(boundary,babolSectorBounds[index]);
+ babolAreaLayer=L.geoJSON(clipped,{style:{color:'#1976d2',weight:3,fillColor:'#2196f3',fillOpacity:.3}}).addTo(babolAreaMap);
+ if(!babolAreaLayer.getLayers().length){caption.textContent='در این بخش، محدوده‌ای در مرز ثبت‌نام پیدا نشد.';return;}
  babolAreaMap.fitBounds(babolAreaLayer.getBounds(),{padding:[24,24]});
- document.getElementById('babolAreaMapCaption').textContent=babolSectorNames[index]+' — محدوده نمایشی تقریبی؛ بخش‌های بیرون از محدوده تحت پوشش بابل جزو خدمات نیستند.';
+ caption.textContent=babolSectorNames[index]+' — فقط داخل مرز ثبت‌نام مشتریان (محدوده شهرستان بابل).';
  setTimeout(()=>{babolAreaMap?.invalidateSize();babolAreaMap?.fitBounds(babolAreaLayer.getBounds(),{padding:[24,24]});},250);
 }
 document.querySelectorAll('[data-area-sector]').forEach(btn=>btn.addEventListener('click',()=>{document.getElementById('areaMapSector').value=btn.dataset.areaSector;showBabolAreaSector();document.getElementById('babolAreaMap').scrollIntoView({behavior:'smooth',block:'center'});}));
@@ -216,10 +264,13 @@ function babolSectorForCoordinates(lat,lng){
  const centreLat=36.55,centreLng=52.68;
  return lat>=centreLat?(lng<centreLng?1:2):(lng<centreLng?3:4);
 }
-document.getElementById('areaLookupForm').addEventListener('submit',e=>{
+document.getElementById('areaLookupForm').addEventListener('submit',async e=>{
  e.preventDefault();
  const lat=Number(document.getElementById('areaLookupLat').value),lng=Number(document.getElementById('areaLookupLng').value);
- document.getElementById('areaLookupResult').textContent=Number.isFinite(lat)&&Number.isFinite(lng)?'حوزه پیشنهادی: '+babolSectorNames[babolSectorForCoordinates(lat,lng)]+' — تأیید قرارگیری در محدوده پوشش لازم است.':'مختصات معتبر وارد کنید.';
+ const result=document.getElementById('areaLookupResult');
+ if(!Number.isFinite(lat)||!Number.isFinite(lng)){result.textContent='مختصات معتبر وارد کنید.';return;}
+ const inside=await checkServiceCoverage(lat,lng);
+ result.textContent=inside===true?'حوزه: '+babolSectorNames[babolSectorForCoordinates(lat,lng)]:inside===false?'این نقطه خارج از محدوده ثبت‌نام بابل است.':'مرز ثبت‌نام بارگذاری نشد؛ امکان تشخیص حوزه وجود ندارد.';
 });
 
 window.showPage=(id,fromPopState=false)=>{if(id==='request'&&!sessionStorage.getItem('zayeat_last_phone'))id='register';const requiredSection=({panelUpload:'upload',panelGoods:'goods',panelPeople:'people',panelDrivers:'people',panelDriverRegister:'people',panelAreas:'people',panelRequests:'requests',panelFiles:'files',panelStories:'stories'})[id];if(requiredSection&&currentRole!=='owner'&&currentPermissions[requiredSection]===false){alert('شما به این بخش دسترسی ندارید.');id='panelHome';}if(id==='panelAdmins'&&currentRole!=='owner'){alert('فقط مدیر اصلی به مدیریت مدیران دسترسی دارد.');id='panelHome';}document.querySelectorAll('.menu-popover.open').forEach(m=>m.classList.remove('open'));document.querySelectorAll('.hamburger[aria-expanded="true"]').forEach(b=>b.setAttribute('aria-expanded','false'));if(panelIds.includes(id)&&id!=='panelLogin'&&id!=='panelManagerSignup'&&!currentUser)id='panelLogin';const cur=document.querySelector('.page.active');if(cur&&cur.id!==id){if(fromPopState){if(historyStack.length)historyStack.pop();}else{historyStack.push(cur.id);history.pushState({...(history.state||{}),zayeatPage:id},'',location.href);}}document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$(id)?.classList.add('active');window.scrollTo({top:0,left:0,behavior:'instant'});document.documentElement.scrollTop=0;document.body.scrollTop=0;$('publicNav').style.display=panelIds.includes(id)?'none':'block';if(id==='request'){initRequestForm();}if(id==='contact')loadCustomerChats();if(id==='register'){initRegistrationMap();setTimeout(()=>registrationMap?.invalidateSize(),120);}if(id==='home'||id==='products')renderPublic();if(id==='panelPeople')loadCustomers();if(id==='panelDrivers')loadDrivers();if(id==='panelAreas'){setTimeout(()=>{try{showBabolAreaSector();}catch(e){document.getElementById('babolAreaMapCaption').textContent='خطا در نمایش نقشه: '+errText(e);}},250);}if(id==='panelRequests')loadCustomerRequests();if(id==='panelInventory')loadAdminExtras();if(id==='panelChats')loadAdminChats();if(id==='panelFiles')loadFiles(true);if(id==='panelGoods')loadFiles(false);if(id==='panelAdmins')loadAdmins();if(id==='panelProfile')loadAdminProfile();if(id==='panelStories')loadMyStories();};
