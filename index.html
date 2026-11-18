@@ -185,6 +185,43 @@ function errText(e){return e?.message||'خطای نامشخص رخ داد.';}
 function setProgress(n){$('prog').style.width=n+'%';$('progText').textContent=Math.round(n)+'٪';}
 window.togglePass=(id,btn)=>{const x=$(id);x.type=x.type==='password'?'text':'password';btn.textContent=x.type==='password'?'نمایش':'پنهان';};
 window.toggleMenu=(id,button)=>{const menu=$(id);const opening=!menu?.classList.contains('open');document.querySelectorAll('.menu-popover.open').forEach(m=>m.classList.remove('open'));document.querySelectorAll('.hamburger[aria-expanded="true"]').forEach(b=>b.setAttribute('aria-expanded','false'));if(opening&&menu){menu.classList.add('open');button?.setAttribute('aria-expanded','true');}};document.addEventListener('click',e=>{if(!e.target.closest('.nav-container')&&!e.target.closest('.admin-menu-wrap')){document.querySelectorAll('.menu-popover.open').forEach(m=>m.classList.remove('open'));document.querySelectorAll('.hamburger[aria-expanded="true"]').forEach(b=>b.setAttribute('aria-expanded','false'));}});
+var babolAreaMap=null,babolAreaLayer=null;
+const babolAreaCentre=[36.55,52.68];
+// Display-only quadrant geometry; not official district or service-area borders.
+const babolAreaExtents=[
+ null,
+ [[36.55,52.34],[36.81,52.68]],
+ [[36.55,52.68],[36.81,53.03]],
+ [[36.24,52.34],[36.55,52.68]],
+ [[36.24,52.68],[36.55,53.03]]
+];
+function showBabolAreaSector(){
+ const index=Number(document.getElementById('areaMapSector').value);
+ if(!window.L){document.getElementById('babolAreaMapCaption').textContent='نقشه بارگذاری نشد؛ اتصال اینترنت یا دسترسی به سرویس نقشه را بررسی کنید.';return;}
+ if(!babolAreaMap){
+  babolAreaMap=L.map('babolAreaMap',{scrollWheelZoom:false}).setView(babolAreaCentre,10);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(babolAreaMap);
+ }
+ if(babolAreaLayer)babolAreaMap.removeLayer(babolAreaLayer);
+ babolAreaLayer=L.rectangle(babolAreaExtents[index],{color:'#1976d2',weight:3,fillColor:'#2196f3',fillOpacity:.23}).addTo(babolAreaMap);
+ babolAreaMap.fitBounds(babolAreaLayer.getBounds(),{padding:[24,24]});
+ document.getElementById('babolAreaMapCaption').textContent=babolSectorNames[index]+' — محدوده نمایشی تقریبی؛ بخش‌های بیرون از محدوده تحت پوشش بابل جزو خدمات نیستند.';
+ setTimeout(()=>{babolAreaMap?.invalidateSize();babolAreaMap?.fitBounds(babolAreaLayer.getBounds(),{padding:[24,24]});},250);
+}
+document.querySelectorAll('[data-area-sector]').forEach(btn=>btn.addEventListener('click',()=>{document.getElementById('areaMapSector').value=btn.dataset.areaSector;showBabolAreaSector();document.getElementById('babolAreaMap').scrollIntoView({behavior:'smooth',block:'center'});}));
+document.getElementById('areaMapSector').addEventListener('change',showBabolAreaSector);
+const babolSectorNames=['','بخش یک — شمال‌غرب','بخش دو — شمال‌شرق','بخش سه — جنوب‌غرب','بخش چهار — جنوب‌شرق'];
+function babolSectorForCoordinates(lat,lng){
+ // Operational quadrants around Babol city centre; not an official administrative boundary.
+ const centreLat=36.55,centreLng=52.68;
+ return lat>=centreLat?(lng<centreLng?1:2):(lng<centreLng?3:4);
+}
+document.getElementById('areaLookupForm').addEventListener('submit',e=>{
+ e.preventDefault();
+ const lat=Number(document.getElementById('areaLookupLat').value),lng=Number(document.getElementById('areaLookupLng').value);
+ document.getElementById('areaLookupResult').textContent=Number.isFinite(lat)&&Number.isFinite(lng)?'حوزه پیشنهادی: '+babolSectorNames[babolSectorForCoordinates(lat,lng)]+' — تأیید قرارگیری در محدوده پوشش لازم است.':'مختصات معتبر وارد کنید.';
+});
+
 window.showPage=(id,fromPopState=false)=>{if(id==='request'&&!sessionStorage.getItem('zayeat_last_phone'))id='register';const requiredSection=({panelUpload:'upload',panelGoods:'goods',panelPeople:'people',panelDrivers:'people',panelDriverRegister:'people',panelAreas:'people',panelRequests:'requests',panelFiles:'files',panelStories:'stories'})[id];if(requiredSection&&currentRole!=='owner'&&currentPermissions[requiredSection]===false){alert('شما به این بخش دسترسی ندارید.');id='panelHome';}if(id==='panelAdmins'&&currentRole!=='owner'){alert('فقط مدیر اصلی به مدیریت مدیران دسترسی دارد.');id='panelHome';}document.querySelectorAll('.menu-popover.open').forEach(m=>m.classList.remove('open'));document.querySelectorAll('.hamburger[aria-expanded="true"]').forEach(b=>b.setAttribute('aria-expanded','false'));if(panelIds.includes(id)&&id!=='panelLogin'&&id!=='panelManagerSignup'&&!currentUser)id='panelLogin';const cur=document.querySelector('.page.active');if(cur&&cur.id!==id){if(fromPopState){if(historyStack.length)historyStack.pop();}else{historyStack.push(cur.id);history.pushState({...(history.state||{}),zayeatPage:id},'',location.href);}}document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$(id)?.classList.add('active');window.scrollTo({top:0,left:0,behavior:'instant'});document.documentElement.scrollTop=0;document.body.scrollTop=0;$('publicNav').style.display=panelIds.includes(id)?'none':'block';if(id==='request'){initRequestForm();}if(id==='contact')loadCustomerChats();if(id==='register'){initRegistrationMap();setTimeout(()=>registrationMap?.invalidateSize(),120);}if(id==='home'||id==='products')renderPublic();if(id==='panelPeople')loadCustomers();if(id==='panelDrivers')loadDrivers();if(id==='panelAreas'){setTimeout(()=>{try{showBabolAreaSector();}catch(e){document.getElementById('babolAreaMapCaption').textContent='خطا در نمایش نقشه: '+errText(e);}},250);}if(id==='panelRequests')loadCustomerRequests();if(id==='panelInventory')loadAdminExtras();if(id==='panelChats')loadAdminChats();if(id==='panelFiles')loadFiles(true);if(id==='panelGoods')loadFiles(false);if(id==='panelAdmins')loadAdmins();if(id==='panelProfile')loadAdminProfile();if(id==='panelStories')loadMyStories();};
 if('scrollRestoration' in history)history.scrollRestoration='manual';
 const initialPage=document.querySelector('.page.active')?.id||'home';if(!history.state?.zayeatPage)history.replaceState({...((history.state&&typeof history.state==='object')?history.state:{}),zayeatPage:initialPage},'',location.href);
@@ -893,42 +930,6 @@ function updatePriceEstimate(){const p=publicWastePrices.find(p=>p.id===$('calcW
 $('calcWaste').onchange=updatePriceEstimate;$('calcWeight').oninput=updatePriceEstimate;
 $('trackingForm').onsubmit=async e=>{e.preventDefault();const id=$('trackingCode').value.trim();if(!/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(id)){$('trackingResult').textContent='کد پیگیری معتبر نیست.';return;}const {data,error}=await sb.rpc('track_customer_request',{p_request_id:id});$('trackingResult').textContent=error?'خطا در دریافت وضعیت':!data?.length?'درخواستی با این کد پیدا نشد.': 'وضعیت: '+(requestStatusLabels[data[0].status]||data[0].status)+(data[0].preferred_date?' | تاریخ پیشنهادی: '+data[0].preferred_date:'')+(data[0].preferred_slot?' | '+data[0].preferred_slot:'');};
 $('inventoryForm').onsubmit=async e=>{e.preventDefault();const {error}=await sb.from('waste_inventory').insert({name:$('inventoryName').value.trim(),weight_kg:Number($('inventoryWeight').value),kind:$('inventoryKind').value,admin_id:currentUser?.id});if(error)alert(errText(error));else{e.target.reset();await loadAdminExtras();}};
-var babolAreaMap=null,babolAreaLayer=null;
-const babolAreaCentre=[36.55,52.68];
-// Display-only quadrant geometry; not official district or service-area borders.
-const babolAreaExtents=[
- null,
- [[36.55,52.34],[36.81,52.68]],
- [[36.55,52.68],[36.81,53.03]],
- [[36.24,52.34],[36.55,52.68]],
- [[36.24,52.68],[36.55,53.03]]
-];
-function showBabolAreaSector(){
- const index=Number(document.getElementById('areaMapSector').value);
- if(!window.L){document.getElementById('babolAreaMapCaption').textContent='نقشه بارگذاری نشد؛ اتصال اینترنت یا دسترسی به سرویس نقشه را بررسی کنید.';return;}
- if(!babolAreaMap){
-  babolAreaMap=L.map('babolAreaMap',{scrollWheelZoom:false}).setView(babolAreaCentre,10);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(babolAreaMap);
- }
- if(babolAreaLayer)babolAreaMap.removeLayer(babolAreaLayer);
- babolAreaLayer=L.rectangle(babolAreaExtents[index],{color:'#1976d2',weight:3,fillColor:'#2196f3',fillOpacity:.23}).addTo(babolAreaMap);
- babolAreaMap.fitBounds(babolAreaLayer.getBounds(),{padding:[24,24]});
- document.getElementById('babolAreaMapCaption').textContent=babolSectorNames[index]+' — محدوده نمایشی تقریبی؛ بخش‌های بیرون از محدوده تحت پوشش بابل جزو خدمات نیستند.';
- setTimeout(()=>{babolAreaMap?.invalidateSize();babolAreaMap?.fitBounds(babolAreaLayer.getBounds(),{padding:[24,24]});},250);
-}
-document.querySelectorAll('[data-area-sector]').forEach(btn=>btn.addEventListener('click',()=>{document.getElementById('areaMapSector').value=btn.dataset.areaSector;showBabolAreaSector();document.getElementById('babolAreaMap').scrollIntoView({behavior:'smooth',block:'center'});}));
-document.getElementById('areaMapSector').addEventListener('change',showBabolAreaSector);
-const babolSectorNames=['','بخش یک — شمال‌غرب','بخش دو — شمال‌شرق','بخش سه — جنوب‌غرب','بخش چهار — جنوب‌شرق'];
-function babolSectorForCoordinates(lat,lng){
- // Operational quadrants around Babol city centre; not an official administrative boundary.
- const centreLat=36.55,centreLng=52.68;
- return lat>=centreLat?(lng<centreLng?1:2):(lng<centreLng?3:4);
-}
-document.getElementById('areaLookupForm').addEventListener('submit',e=>{
- e.preventDefault();
- const lat=Number(document.getElementById('areaLookupLat').value),lng=Number(document.getElementById('areaLookupLng').value);
- document.getElementById('areaLookupResult').textContent=Number.isFinite(lat)&&Number.isFinite(lng)?'حوزه پیشنهادی: '+babolSectorNames[babolSectorForCoordinates(lat,lng)]+' — تأیید قرارگیری در محدوده پوشش لازم است.':'مختصات معتبر وارد کنید.';
-});
 async function loadDrivers(){
  const box=$('driversList');box.textContent='در حال دریافت فهرست رانندگان...';
  const {data,error}=await sb.rpc('admin_list_drivers');
