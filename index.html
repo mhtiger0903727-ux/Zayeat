@@ -1273,17 +1273,20 @@ updateDriverPlateOptions();
 $('driverRegisterForm').addEventListener('submit',async e=>{
  e.preventDefault();
  const btn=e.target.querySelector('[type="submit"]');btn.disabled=true;
- const digits=x=>String(x).replace(/[۰-۹]/g,c=>String(c.charCodeAt(0)-1776)).replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632));
- const {data,error}=await sb.rpc('admin_register_driver',{p_first_name:$('driverFirstName').value.trim(),p_last_name:$('driverLastName').value.trim(),p_phone:digits($('driverPhone').value.trim()),p_national_id:digits($('driverNationalId').value.trim()),p_plate:[$('driverPlateType').selectedOptions[0].textContent, digits($('driverPlateFirst').value), $('driverPlateLetter').value, digits($('driverPlateMiddle').value), 'ایران', digits($('driverPlateRegion').value)].join(' '),p_vehicle_type:$('driverVehicle').value,p_area_number:null});
- btn.disabled=false;
- if(error){message('driverRegisterMsg',errText(error),true);return;}
- let info='راننده ثبت شد. کد پرسنلی: '+data;
- const {data:provision,error:provisionError}=await sb.functions.invoke('provision-driver-phone-login',{body:{personnel_code:data}});
- if(provisionError||!provision?.success){info+='؛ حساب ورود خودکار ایجاد نشد: '+(provision?.error||provisionError?.message||'خطای سرویس')+'. از فهرست رانندگان برای فعال‌سازی دوباره استفاده کنید.';}
- else info+='؛ حساب ورود با شماره تماس فعال شد. رمز اولیه کد ملی است و راننده در اولین ورود باید آن را تغییر دهد.';
- message('driverRegisterMsg',info,!!provisionError||!provision?.success);
- e.target.reset();
- updateDriverPlateOptions();
+ try{
+  const digits=normalizeDriverDigits;
+  const {data,error}=await sb.rpc('admin_register_driver',{p_first_name:$('driverFirstName').value.trim(),p_last_name:$('driverLastName').value.trim(),p_phone:digits($('driverPhone').value.trim()),p_national_id:digits($('driverNationalId').value.trim()),p_plate:[$('driverPlateType').selectedOptions[0].textContent,digits($('driverPlateFirst').value),$('driverPlateLetter').value,digits($('driverPlateMiddle').value),'ایران',digits($('driverPlateRegion').value)].join(' '),p_vehicle_type:$('driverVehicle').value,p_area_number:null});
+  if(error)throw error;
+  let info='راننده ثبت شد. کد پرسنلی: '+data;
+  try{
+   const {data:provision,error:provisionError}=await sb.functions.invoke('provision-driver-phone-login',{body:{personnel_code:data}});
+   if(provisionError||!provision?.success)throw new Error(provision?.error||provisionError?.message||'خطای سرویس');
+   info+='؛ حساب ورود با شماره تماس فعال شد. رمز اولیه کد ملی است و راننده در اولین ورود باید آن را تغییر دهد.';
+  }catch(provisionError){info+='؛ حساب ورود خودکار ایجاد نشد: '+errText(provisionError)+'. از فهرست رانندگان برای فعال‌سازی دوباره استفاده کنید.';}
+  message('driverRegisterMsg',info,info.includes('ایجاد نشد'));
+  e.target.reset();updateDriverPlateOptions();
+ }catch(error){message('driverRegisterMsg',errText(error),true);}
+ finally{btn.disabled=false;}
 });
 let inventoryChartRows=[];
 function inventoryBucket(iso,period){
