@@ -456,7 +456,7 @@ const storyVoterId=getStoryVoterId();
 const sb=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false,flowType:'pkce',storage:window.sessionStorage},global:{headers:{'x-story-voter-id':storyVoterId}}});
 window.productSocialSb=sb;window.dispatchEvent(new Event('product-social-ready'));
 const $=id=>document.getElementById(id);
-let historyStack=['home'];let currentUser=null;let currentRole=null;let currentUsername='';let currentPermissions={upload:true,goods:true,people:true,requests:true,files:true,stories:true};let cachedFiles=[];
+let historyStack=['home'];let currentUser=null;let currentRole=null;let currentUsername='';let currentPermissions={};let cachedFiles=[];
 const panelIds=['panelLogin','panelManagerSignup','panelHome','panelUpload','panelGoods','panelPeople','panelRequests','panelInventory','panelRoutes','panelChats','panelRewards','panelPlanner','panelDriverRegister','panelDrivers','panelFiles','panelAdmins','panelProfile','panelStories','panelNews'];
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function message(id,s,error=false){$(id).textContent=s;$(id).classList.toggle('error',!!error);}
@@ -886,7 +886,7 @@ $('loginForm').addEventListener('submit',async e=>{
  if(currentUser&&currentRole){try{await migrateLegacyData();}catch(error){const notice=$('migrationNotice');if(notice)notice.textContent='ورود موفق بود؛ انتقال اطلاعات قدیمی انجام نشد: '+errText(error);}}
 });
 $('managerSignupForm').addEventListener('submit',async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;message('managerSignupMsg','در حال ساخت حساب امن...');try{const email=$('managerSignupEmail').value.trim().toLowerCase();const password=$('managerSignupPassword').value;if(password.length<10)throw new Error('رمز عبور باید حداقل ۱۰ کاراکتر باشد.');const {data,error}=await sb.auth.signUp({email,password,options:{emailRedirectTo:'https://mhtiger0903727-ux.github.io/Zayeat/'}});if(error)throw error;if(data.session){await loadSession(data.user);showPage('panelHome');}else message('managerSignupMsg','حساب ساخته شد. ایمیل تأیید را باز کنید؛ پس از تأیید، با همین ایمیل و رمز عبور وارد شوید.');e.target.reset();}catch(x){message('managerSignupMsg',errText(x),true);}finally{b.disabled=false;}});
-async function loadSession(user){currentUser=user;const {data,error}=await sb.from('admin_users').select('role,username,display_name,public_id,avatar_url,contact_phone,email_notifications,compact_mode,permissions').eq('user_id',user.id).maybeSingle();if(error)throw error;if(!data){currentRole=null;throw new Error('این حساب در فهرست مدیران ثبت نشده است.');}currentRole=data.role;currentUsername=data.username;currentPermissions=data.permissions||{upload:true,goods:true,people:true,requests:true,files:true,stories:true};document.body.classList.toggle('admin-compact',!!data.compact_mode);const profileName=data.display_name||currentUsername||'مدیر';$('roleLabel').textContent=profileName+' — '+(currentRole==='owner'?'مدیر اصلی':'مدیر');$('adminHomeDisplayName').textContent=profileName;const homeAvatar=$('adminHomeAvatar'),homeFallback=$('adminHomeAvatarFallback');homeAvatar.src=data.avatar_url||'';homeAvatar.style.display=data.avatar_url?'block':'none';homeFallback.style.display=data.avatar_url?'none':'grid';homeFallback.textContent=profileName.trim().slice(0,1)||'م';$('adminMenuBtn').classList.toggle('hidden',currentRole!=='owner');document.querySelectorAll('#adminMenu [data-section]').forEach(button=>{button.classList.toggle('hidden',currentRole!=='owner'&&!adminPermissionEnabled(currentPermissions,button.dataset.section));});document.querySelectorAll('#adminMenu .admin-menu-group').forEach(group=>{const items=[...group.querySelectorAll('button')],visible=items.filter(item=>!item.classList.contains('hidden'));group.classList.toggle('hidden',visible.length===0);group.classList.toggle('admin-menu-singleton',visible.length===1);if(visible.length===1)group.open=false;});}
+async function loadSession(user){currentUser=user;const {data,error}=await sb.from('admin_users').select('role,username,display_name,public_id,avatar_url,contact_phone,email_notifications,compact_mode,permissions').eq('user_id',user.id).maybeSingle();if(error)throw error;if(!data){currentRole=null;throw new Error('این حساب در فهرست مدیران ثبت نشده است.');}currentRole=data.role;currentUsername=data.username;currentPermissions=data.permissions||{};document.body.classList.toggle('admin-compact',!!data.compact_mode);const profileName=data.display_name||currentUsername||'مدیر';$('roleLabel').textContent=profileName+' — '+(currentRole==='owner'?'مدیر اصلی':'مدیر');$('adminHomeDisplayName').textContent=profileName;const homeAvatar=$('adminHomeAvatar'),homeFallback=$('adminHomeAvatarFallback');homeAvatar.src=data.avatar_url||'';homeAvatar.style.display=data.avatar_url?'block':'none';homeFallback.style.display=data.avatar_url?'none':'grid';homeFallback.textContent=profileName.trim().slice(0,1)||'م';$('adminMenuBtn').classList.toggle('hidden',currentRole!=='owner');document.querySelectorAll('#adminMenu [data-section]').forEach(button=>{button.classList.toggle('hidden',currentRole!=='owner'&&!adminPermissionEnabled(currentPermissions,button.dataset.section));});document.querySelectorAll('#adminMenu .admin-menu-group').forEach(group=>{const items=[...group.querySelectorAll('button')],visible=items.filter(item=>!item.classList.contains('hidden'));group.classList.toggle('hidden',visible.length===0);group.classList.toggle('admin-menu-singleton',visible.length===1);if(visible.length===1)group.open=false;});}
 
 // A category with only one permitted action behaves like a direct menu item.
 document.querySelectorAll('#adminMenu .admin-menu-group > summary').forEach(summary=>{
@@ -1020,6 +1020,7 @@ window.toggleRequestSound=function(){
 window.testRequestSound=function(){
  requestSoundEnabled=true;updateRequestSoundButton();void speakRequestAlert();
 };
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&requestPollingTimer&&currentUser&&currentRole)void loadCustomerRequests();});
 
 const requestDate=iso=>new Date(iso).toLocaleString('fa-IR');
 function renderRequestDetails(){
@@ -1123,7 +1124,7 @@ const adminPermissionParent={inventory:'requests',routes:'requests',chats:'reque
 function adminPermissionEnabled(perms,key){
  if(Object.prototype.hasOwnProperty.call(perms||{},key))return perms[key]!==false;
  const parent=adminPermissionParent[key];
- return parent?perms?.[parent]!==false:true;
+ return parent?perms?.[parent]===true:false;
 }
 async function openAdminDossier(admin){
  const box=$('adminDossier');if(!box)return;
