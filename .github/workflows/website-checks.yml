@@ -25,7 +25,7 @@ jobs:
           assert 'function startRequestInboxLive()' in source
           assert 'if(!requestPollingTimer)startRequestInboxLive()' in source
           assert "return parent?perms?.[parent]===true:false;" in source
-          scripts = re.findall(r'<script\\b([^>]*)>(.*?)</script>', source, re.S|re.I)
+          scripts = re.findall(r'<script\b([^>]*)>(.*?)</script>', source, re.S|re.I)
           for i,(attrs,body) in enumerate(scripts):
               if 'src=' in attrs or not body.strip(): continue
               with tempfile.NamedTemporaryFile(mode='w', suffix='.mjs', encoding='utf-8') as f:
