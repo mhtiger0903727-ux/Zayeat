@@ -961,58 +961,69 @@ function archiveForCustomer(c){const rows=archivedCustomerRequests.filter(r=>r.c
 const requestStatusLabels={new:'جدید',reviewing:'در حال بررسی',accepted:'تأیید شده',scheduled:'زمان‌بندی شده',completed:'انجام شده',rejected:'رد شده'};
 
 let requestInboxRows=[],selectedRequestId=null,requestRealtimeChannel=null,requestPollingTimer=null,requestRefreshInFlight=false,requestInboxInitialized=false,requestRefreshPending=false;
-let requestSoundEnabled=false,requestAudioContext=null;
+let requestSoundEnabled=false,requestAlertAudio=null,requestAlertUrl=null;
 const requestSpeechSupported=('speechSynthesis' in window)&&('SpeechSynthesisUtterance' in window);
-function requestAudioBeep(){
- try{
-  const AudioContextClass=window.AudioContext||window.webkitAudioContext;
-  if(!AudioContextClass)return false;
-  requestAudioContext=requestAudioContext||new AudioContextClass();
-  if(requestAudioContext.state==='suspended')void requestAudioContext.resume();
-  const now=requestAudioContext.currentTime;
-  [0,.23].forEach((offset,i)=>{
-   const osc=requestAudioContext.createOscillator(),gain=requestAudioContext.createGain();
-   osc.type='sine';osc.frequency.value=i?880:740;
-   gain.gain.setValueAtTime(.0001,now+offset);
-   gain.gain.exponentialRampToValueAtTime(.18,now+offset+.02);
-   gain.gain.exponentialRampToValueAtTime(.0001,now+offset+.18);
-   osc.connect(gain);gain.connect(requestAudioContext.destination);
-   osc.start(now+offset);osc.stop(now+offset+.19);
-  });return true;
- }catch(error){console.warn('Request beep unavailable',error);return false;}
+function makeRequestAlertWav(){
+ const sampleRate=16000,duration=.7,samples=Math.round(sampleRate*duration),bytes=new ArrayBuffer(44+samples*2),view=new DataView(bytes);
+ const write=(at,text)=>{for(let i=0;i<text.length;i++)view.setUint8(at+i,text.charCodeAt(i));};
+ write(0,'RIFF');view.setUint32(4,36+samples*2,true);write(8,'WAVE');write(12,'fmt ');
+ view.setUint32(16,16,true);view.setUint16(20,1,true);view.setUint16(22,1,true);view.setUint32(24,sampleRate,true);
+ view.setUint32(28,sampleRate*2,true);view.setUint16(32,2,true);view.setUint16(34,16,true);write(36,'data');view.setUint32(40,samples*2,true);
+ for(let i=0;i<samples;i++){
+  const t=i/sampleRate,segment=t<.3?0:1,local=t-(segment?.34:0),freq=segment?880:740;
+  const active=local>=0&&local<.28,envelope=active?Math.min(1,local/.025)*Math.min(1,(.28-local)/.07):0;
+  const v=active?Math.sin(2*Math.PI*freq*t)*envelope*.42:0;
+  view.setInt16(44+i*2,Math.round(v*32767),true);
+ }
+ return new Blob([bytes],{type:'audio/wav'});
 }
 function updateRequestSoundButton(){
  const btn=$('requestSoundToggle');if(!btn)return;
  btn.textContent=requestSoundEnabled?'🔊 صدای اعلان فعال است':'🔇 فعال‌سازی صدای اعلان';
  btn.setAttribute('aria-pressed',String(requestSoundEnabled));
 }
-function requestSoundFeedback(message){
- const el=$('requestLiveStatus');if(el)el.textContent=message;
+function requestSoundFeedback(message){const el=$('requestLiveStatus');if(el)el.textContent=message;}
+function prepareRequestAudio(){
+ if(!requestAlertAudio){
+  requestAlertUrl=URL.createObjectURL(makeRequestAlertWav());
+  requestAlertAudio=new Audio();
+  requestAlertAudio.preload='auto';
+  requestAlertAudio.src=requestAlertUrl;
+  requestAlertAudio.volume=1;
+ }
+ return requestAlertAudio;
 }
-function speakRequestAlert(){
+async function speakRequestAlert(){
  if(!requestSoundEnabled)return false;
- const beeped=requestAudioBeep();
- if(!requestSpeechSupported){requestSoundFeedback('زنگ اعلان اجرا شد؛ گفتار فارسی در این مرورگر پشتیبانی نمی‌شود.');return beeped;}
  try{
-  const voices=window.speechSynthesis.getVoices();
-  const persian=voices.find(v=>/^fa(-|$)/i.test(v.lang));
-  if(!persian){requestSoundFeedback('زنگ اعلان اجرا شد؛ صدای فارسی روی دستگاه موجود نیست. برای گفتار فارسی باید صدای فارسی نصب شود.');return beeped;}
-  const utterance=new SpeechSynthesisUtterance('الو، من ضایعات دارم!');
-  utterance.lang='fa-IR';utterance.voice=persian;utterance.rate=.92;utterance.pitch=1;utterance.volume=1;
-  utterance.onerror=event=>requestSoundFeedback('زنگ پخش شد اما گفتار فارسی اجرا نشد ('+event.error+').');
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(utterance);
+  const audio=prepareRequestAudio();
+  audio.pause();audio.currentTime=0;
+  await audio.play();
+  requestSoundFeedback('زنگ اعلان پخش شد.'+(requestSpeechSupported?' در حال بررسی گوینده فارسی...':' گفتار فارسی در این مرورگر پشتیبانی نمی‌شود.'));
+  if(requestSpeechSupported){
+   const voices=window.speechSynthesis.getVoices();
+   const persian=voices.find(v=>/^fa(-|$)/i.test(v.lang));
+   if(persian){
+    const utterance=new SpeechSynthesisUtterance('الو، من ضایعات دارم!');
+    utterance.lang='fa-IR';utterance.voice=persian;utterance.rate=.92;utterance.volume=1;
+    utterance.onerror=e=>requestSoundFeedback('زنگ پخش شد؛ گفتار فارسی خطا داشت: '+e.error);
+    window.speechSynthesis.cancel();window.speechSynthesis.speak(utterance);
+   }else requestSoundFeedback('زنگ پخش شد؛ صدای گوینده فارسی روی دستگاه نصب نیست.');
+  }
   return true;
- }catch(error){requestSoundFeedback('زنگ پخش شد؛ خطا در گفتار فارسی: '+errText(error));return beeped;}
+ }catch(error){
+  const detail=error?.name||error?.message||String(error);
+  requestSoundFeedback('پخش صدا توسط دستگاه/مرورگر انجام نشد: '+detail+'؛ لطفاً حالت بی‌صدا و صدای رسانه را بررسی کنید.');
+  console.warn('Request audio playback failed',error);return false;
+ }
 }
 window.toggleRequestSound=function(){
- requestSoundEnabled=!requestSoundEnabled;
- updateRequestSoundButton();
- if(requestSoundEnabled)speakRequestAlert();
- else if(requestSpeechSupported)window.speechSynthesis.cancel();
+ requestSoundEnabled=!requestSoundEnabled;updateRequestSoundButton();
+ if(requestSoundEnabled)void speakRequestAlert();
+ else{requestAlertAudio?.pause();if(requestSpeechSupported)window.speechSynthesis.cancel();}
 };
 window.testRequestSound=function(){
- requestSoundEnabled=true;updateRequestSoundButton();speakRequestAlert();
+ requestSoundEnabled=true;updateRequestSoundButton();void speakRequestAlert();
 };
 
 const requestDate=iso=>new Date(iso).toLocaleString('fa-IR');
