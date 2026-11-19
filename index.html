@@ -961,34 +961,57 @@ function archiveForCustomer(c){const rows=archivedCustomerRequests.filter(r=>r.c
 const requestStatusLabels={new:'جدید',reviewing:'در حال بررسی',accepted:'تأیید شده',scheduled:'زمان‌بندی شده',completed:'انجام شده',rejected:'رد شده'};
 
 let requestInboxRows=[],selectedRequestId=null,requestRealtimeChannel=null,requestPollingTimer=null,requestRefreshInFlight=false,requestInboxInitialized=false,requestRefreshPending=false;
-let requestSoundEnabled=false,requestSpeechSupported=('speechSynthesis' in window)&&('SpeechSynthesisUtterance' in window);
+let requestSoundEnabled=false,requestAudioContext=null;
+const requestSpeechSupported=('speechSynthesis' in window)&&('SpeechSynthesisUtterance' in window);
+function requestAudioBeep(){
+ try{
+  const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+  if(!AudioContextClass)return false;
+  requestAudioContext=requestAudioContext||new AudioContextClass();
+  if(requestAudioContext.state==='suspended')void requestAudioContext.resume();
+  const now=requestAudioContext.currentTime;
+  [0,.23].forEach((offset,i)=>{
+   const osc=requestAudioContext.createOscillator(),gain=requestAudioContext.createGain();
+   osc.type='sine';osc.frequency.value=i?880:740;
+   gain.gain.setValueAtTime(.0001,now+offset);
+   gain.gain.exponentialRampToValueAtTime(.18,now+offset+.02);
+   gain.gain.exponentialRampToValueAtTime(.0001,now+offset+.18);
+   osc.connect(gain);gain.connect(requestAudioContext.destination);
+   osc.start(now+offset);osc.stop(now+offset+.19);
+  });return true;
+ }catch(error){console.warn('Request beep unavailable',error);return false;}
+}
 function updateRequestSoundButton(){
  const btn=$('requestSoundToggle');if(!btn)return;
- btn.textContent=!requestSpeechSupported?'🔇 گفتار فارسی در این مرورگر پشتیبانی نمی‌شود':requestSoundEnabled?'🔊 صدای اعلان فعال است':'🔇 فعال‌سازی صدای اعلان';
- btn.disabled=!requestSpeechSupported;
+ btn.textContent=requestSoundEnabled?'🔊 صدای اعلان فعال است':'🔇 فعال‌سازی صدای اعلان';
  btn.setAttribute('aria-pressed',String(requestSoundEnabled));
 }
+function requestSoundFeedback(message){
+ const el=$('requestLiveStatus');if(el)el.textContent=message;
+}
 function speakRequestAlert(){
- if(!requestSpeechSupported||!requestSoundEnabled)return false;
+ if(!requestSoundEnabled)return false;
+ const beeped=requestAudioBeep();
+ if(!requestSpeechSupported){requestSoundFeedback('زنگ اعلان اجرا شد؛ گفتار فارسی در این مرورگر پشتیبانی نمی‌شود.');return beeped;}
  try{
-  const utterance=new SpeechSynthesisUtterance('الو، من ضایعات دارم!');
-  utterance.lang='fa-IR';utterance.rate=.92;utterance.pitch=1;utterance.volume=1;
   const voices=window.speechSynthesis.getVoices();
   const persian=voices.find(v=>/^fa(-|$)/i.test(v.lang));
-  if(persian)utterance.voice=persian;
-  window.speechSynthesis.cancel();window.speechSynthesis.speak(utterance);
+  if(!persian){requestSoundFeedback('زنگ اعلان اجرا شد؛ صدای فارسی روی دستگاه موجود نیست. برای گفتار فارسی باید صدای فارسی نصب شود.');return beeped;}
+  const utterance=new SpeechSynthesisUtterance('الو، من ضایعات دارم!');
+  utterance.lang='fa-IR';utterance.voice=persian;utterance.rate=.92;utterance.pitch=1;utterance.volume=1;
+  utterance.onerror=event=>requestSoundFeedback('زنگ پخش شد اما گفتار فارسی اجرا نشد ('+event.error+').');
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
   return true;
- }catch(e){console.warn('Request alert speech unavailable',e);return false;}
+ }catch(error){requestSoundFeedback('زنگ پخش شد؛ خطا در گفتار فارسی: '+errText(error));return beeped;}
 }
 window.toggleRequestSound=function(){
- if(!requestSpeechSupported)return;
  requestSoundEnabled=!requestSoundEnabled;
- if(!requestSoundEnabled)window.speechSynthesis.cancel();
  updateRequestSoundButton();
  if(requestSoundEnabled)speakRequestAlert();
+ else if(requestSpeechSupported)window.speechSynthesis.cancel();
 };
 window.testRequestSound=function(){
- if(!requestSpeechSupported){alert('مرورگر فعلی از تبدیل متن به گفتار پشتیبانی نمی‌کند.');return;}
  requestSoundEnabled=true;updateRequestSoundButton();speakRequestAlert();
 };
 
@@ -1035,7 +1058,7 @@ async function loadCustomerRequests(){
   if(!selectedRequestId&&requestInboxRows.length)selectedRequestId=requestInboxRows[0].id;
   const added=requestInboxInitialized?requestInboxRows.filter(r=>!previousIds.has(r.id)):[];
   requestInboxInitialized=true;renderRequestInbox();
-  if(added.length){$('requestLiveStatus').textContent=added.length.toLocaleString('fa-IR')+' درخواست جدید دریافت شد.'+(requestSoundEnabled?' اعلان صوتی اجرا شد.':' برای شنیدن صدا آن را فعال کنید.');speakRequestAlert();}
+  if(added.length){$('requestLiveStatus').textContent=added.length.toLocaleString('fa-IR')+' درخواست جدید دریافت شد.'+(requestSoundEnabled?'':' برای شنیدن صدا آن را فعال کنید.');if(requestSoundEnabled)speakRequestAlert();}
   else if(!requestRealtimeChannel)$('requestLiveStatus').textContent='به‌روزرسانی خودکار هر ۵ ثانیه';
  }catch(error){if(!requestInboxInitialized)box.innerHTML='<p class="msg error">'+esc(errText(error))+'</p>';$('requestLiveStatus').textContent='خطا در دریافت: '+errText(error);}
  finally{requestRefreshInFlight=false;if(requestRefreshPending){requestRefreshPending=false;void loadCustomerRequests();}}
