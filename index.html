@@ -1311,106 +1311,9 @@ async function loadAdmins(){
  }catch(error){box.innerHTML='<p class="msg error">'+esc(errText(error))+'</p>';}
 }
 $('passwordForm').addEventListener('submit',async e=>{e.preventDefault();const {error}=await sb.auth.updateUser({password:$('newPassword').value});if(error)message('passwordMsg',errText(error),true);else{message('passwordMsg','رمز عبور با موفقیت تغییر کرد.');e.target.reset();}});
-</script>
-<div id="zayeatSplash" aria-label="شروع الو ضایعات"><div class="splash-skyline"><i></i><i></i><i></i></div><div class="splash-brand">الو ضایعات<div class="splash-sub">بازیافت هوشمند، آینده‌ای پاک‌تر</div></div><div class="splash-road"><span class="road-dashes"></span></div><div class="splash-roadside left"></div><div class="splash-roadside right"></div><img class="z-vector-truck" src="./assets/zayeat-truck.webp" alt="وانت الو ضایعات" /><button class="splash-skip" type="button">ورود به برنامه</button></div>
-<nav id="zayeatDock" aria-label="دسترسی سریع">
-<button data-page="home" class="active"><span>⌂</span>خانه</button>
-<button data-page="products"><span>♻</span>قیمت‌ها</button>
-<button data-page="request"><span>🚚</span>درخواست</button>
-<button data-page="register"><span>＋</span>ثبت‌نام</button>
-<button data-page="contact"><span>☎</span>تماس</button>
-<button data-page="panelLogin"><span>♙</span>مدیریت</button>
-</nav>
-<script>
-(()=> {
- const $=id=>document.getElementById(id);
- // Navigation fallback: public pages remain usable even if the remote auth SDK/CDN is unavailable.
- if(!window.showPage){
-  window.showPage=(id)=>{
-   const target=$(id);
-   if(!target)return;
-   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-   target.classList.add('active');
-   const nav=$('publicNav');
-   if(nav)nav.style.display=id.startsWith('panel')?'none':'block';
-  };
-  window.goBack=()=>window.showPage('home');
-  window.enterPanel=()=>window.showPage('panelLogin');
- }
- const splash=$('zayeatSplash');
- const dock=$('zayeatDock');
- // Bind navigation before optional decorative enhancements so a visual script error cannot disable the site.
- dock?.addEventListener('click',e=>{
-  const button=e.target.closest('button[data-page]');
-  if(!button)return;
-  window.showPage?.(button.dataset.page);
-  dock.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===button));
- });
- let splashFinished=false;
- const finish=()=>{
-  if(splashFinished)return;
-  splashFinished=true;
-  if(splash){
-   splash.style.setProperty('display','none','important');
-   splash.style.setProperty('visibility','hidden','important');
-   splash.style.setProperty('pointer-events','none','important');
-   splash.remove();
-  }
-  if(!document.querySelector('.page.active'))document.getElementById('home')?.classList.add('active');
- };
- const splashTruck=splash?.querySelector('.z-vector-truck');
- splash?.querySelector('.splash-skip')?.addEventListener('click',finish);
- // Splash must never delay access to the actual website: hard limit 4 seconds.
- splashTruck?.addEventListener('error',finish,{once:true});
- setTimeout(finish,4000);
- window.addEventListener('load',()=>setTimeout(finish,4000),{once:true});
 
- const admin=$('adminMenu');
- if(admin&&!$('adminQuickLabel')){
-  const label=document.createElement('p');label.id='adminQuickLabel';label.className='muted';label.textContent='همه ابزارهای مدیریت در دسترس شماست؛ یکی را انتخاب کنید.';
-  admin.before(label);
- }
- const updateDock=()=>{
-  const id=document.querySelector('.page.active')?.id||'home';
-  dock?.querySelectorAll('button[data-page]').forEach(b=>b.classList.toggle('active',
-   (id==='panelLogin'||id.startsWith('panel'))?b.dataset.page==='panelLogin':b.dataset.page===id));
-  if(id.startsWith('panel')&&id!=='panelLogin')dock?.querySelectorAll('button').forEach(b=>{if(b.dataset.page==='panelLogin')b.classList.add('active')});
- };
- const observer=new MutationObserver(updateDock);
- document.querySelectorAll('.page').forEach(p=>observer.observe(p,{attributes:true,attributeFilter:['class']}));
- updateDock();
-})();
+// Site features share the same module scope as Supabase, auth, and DOM helpers.
 
-/* واژه‌گذاری متناسب با محیط اجرا: برنامه در اپ، وب‌سایت در مرورگر */
-(function(){
- const ua=navigator.userAgent||'';
- const isApp=/(;\s*wv\)|\bZayeatApp\b|ZayeatAndroidWebView)/i.test(ua) || !!(window.AndroidAppBridge||window.ZayeatApp);
- const appWord='برنامه', webWord='وب‌سایت';
- const convert=s=>{
-  if(!s || !/(سایت|وب.?سایت|برنامه)/.test(s)) return s;
-  return isApp
-   ? s.replace(/وب[\u200c ]?سایت|وبسایت|سایت/g,appWord)
-   : s.replace(/وب[\\u200c ]?سایت|وبسایت/g,webWord).replace(/\bبرنامه\b/g,webWord);
- };
- const apply=root=>{
-  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
-  let n; while((n=walker.nextNode())) { const next=convert(n.nodeValue); if(next!==n.nodeValue) n.nodeValue=next; }
-  root.querySelectorAll?.('[title],[aria-label],[placeholder],[alt]').forEach(el=>{
-   for(const a of ['title','aria-label','placeholder','alt']){
-    const v=el.getAttribute(a); if(v) el.setAttribute(a,convert(v));
-   }
-  });
- };
- const run=()=>apply(document.body);
- if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',run,{once:true}); else run();
- new MutationObserver(ms=>ms.forEach(m=>{
-  m.addedNodes.forEach(n=>{if(n.nodeType===Node.TEXT_NODE)n.nodeValue=convert(n.nodeValue);else if(n.nodeType===Node.ELEMENT_NODE)apply(n);});
-  if(m.type==='characterData'){const next=convert(m.target.nodeValue);if(next!==m.target.nodeValue)m.target.nodeValue=next;}
- })).observe(document.documentElement,{subtree:true,childList:true,characterData:true});
-})();
-</script>
-<script src="./assets/product-features.js?v=9" defer></script>
-<script>
 async function downloadLatestAndroidApk(){
  const button=document.getElementById('downloadAndroidApk'),status=document.getElementById('androidDownloadStatus');
  if(!button||!status)return;button.disabled=true;status.textContent='در حال بررسی نسخه قابل دانلود...';
@@ -1778,4 +1681,105 @@ $('planPickupRoute').onclick=async()=>{
  box.textContent=stops.length+' مقصد انتخاب شد. مسیر برای بررسی راننده باز می‌شود؛ ترتیب توقف‌ها خودکار بهینه نشده است.';
  window.open(url,'_blank','noopener');
 };
-</script></body></html>
+
+window.downloadLatestAndroidApk=downloadLatestAndroidApk;
+</script>
+<div id="zayeatSplash" aria-label="شروع الو ضایعات"><div class="splash-skyline"><i></i><i></i><i></i></div><div class="splash-brand">الو ضایعات<div class="splash-sub">بازیافت هوشمند، آینده‌ای پاک‌تر</div></div><div class="splash-road"><span class="road-dashes"></span></div><div class="splash-roadside left"></div><div class="splash-roadside right"></div><img class="z-vector-truck" src="./assets/zayeat-truck.webp" alt="وانت الو ضایعات" /><button class="splash-skip" type="button">ورود به برنامه</button></div>
+<nav id="zayeatDock" aria-label="دسترسی سریع">
+<button data-page="home" class="active"><span>⌂</span>خانه</button>
+<button data-page="products"><span>♻</span>قیمت‌ها</button>
+<button data-page="request"><span>🚚</span>درخواست</button>
+<button data-page="register"><span>＋</span>ثبت‌نام</button>
+<button data-page="contact"><span>☎</span>تماس</button>
+<button data-page="panelLogin"><span>♙</span>مدیریت</button>
+</nav>
+<script>
+(()=> {
+ const $=id=>document.getElementById(id);
+ // Navigation fallback: public pages remain usable even if the remote auth SDK/CDN is unavailable.
+ if(!window.showPage){
+  window.showPage=(id)=>{
+   const target=$(id);
+   if(!target)return;
+   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+   target.classList.add('active');
+   const nav=$('publicNav');
+   if(nav)nav.style.display=id.startsWith('panel')?'none':'block';
+  };
+  window.goBack=()=>window.showPage('home');
+  window.enterPanel=()=>window.showPage('panelLogin');
+ }
+ const splash=$('zayeatSplash');
+ const dock=$('zayeatDock');
+ // Bind navigation before optional decorative enhancements so a visual script error cannot disable the site.
+ dock?.addEventListener('click',e=>{
+  const button=e.target.closest('button[data-page]');
+  if(!button)return;
+  window.showPage?.(button.dataset.page);
+  dock.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===button));
+ });
+ let splashFinished=false;
+ const finish=()=>{
+  if(splashFinished)return;
+  splashFinished=true;
+  if(splash){
+   splash.style.setProperty('display','none','important');
+   splash.style.setProperty('visibility','hidden','important');
+   splash.style.setProperty('pointer-events','none','important');
+   splash.remove();
+  }
+  if(!document.querySelector('.page.active'))document.getElementById('home')?.classList.add('active');
+ };
+ const splashTruck=splash?.querySelector('.z-vector-truck');
+ splash?.querySelector('.splash-skip')?.addEventListener('click',finish);
+ // Splash must never delay access to the actual website: hard limit 4 seconds.
+ splashTruck?.addEventListener('error',finish,{once:true});
+ setTimeout(finish,4000);
+ window.addEventListener('load',()=>setTimeout(finish,4000),{once:true});
+
+ const admin=$('adminMenu');
+ if(admin&&!$('adminQuickLabel')){
+  const label=document.createElement('p');label.id='adminQuickLabel';label.className='muted';label.textContent='همه ابزارهای مدیریت در دسترس شماست؛ یکی را انتخاب کنید.';
+  admin.before(label);
+ }
+ const updateDock=()=>{
+  const id=document.querySelector('.page.active')?.id||'home';
+  dock?.querySelectorAll('button[data-page]').forEach(b=>b.classList.toggle('active',
+   (id==='panelLogin'||id.startsWith('panel'))?b.dataset.page==='panelLogin':b.dataset.page===id));
+  if(id.startsWith('panel')&&id!=='panelLogin')dock?.querySelectorAll('button').forEach(b=>{if(b.dataset.page==='panelLogin')b.classList.add('active')});
+ };
+ const observer=new MutationObserver(updateDock);
+ document.querySelectorAll('.page').forEach(p=>observer.observe(p,{attributes:true,attributeFilter:['class']}));
+ updateDock();
+})();
+
+/* واژه‌گذاری متناسب با محیط اجرا: برنامه در اپ، وب‌سایت در مرورگر */
+(function(){
+ const ua=navigator.userAgent||'';
+ const isApp=/(;\s*wv\)|\bZayeatApp\b|ZayeatAndroidWebView)/i.test(ua) || !!(window.AndroidAppBridge||window.ZayeatApp);
+ const appWord='برنامه', webWord='وب‌سایت';
+ const convert=s=>{
+  if(!s || !/(سایت|وب.?سایت|برنامه)/.test(s)) return s;
+  return isApp
+   ? s.replace(/وب[\u200c ]?سایت|وبسایت|سایت/g,appWord)
+   : s.replace(/وب[\\u200c ]?سایت|وبسایت/g,webWord).replace(/\bبرنامه\b/g,webWord);
+ };
+ const apply=root=>{
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+  let n; while((n=walker.nextNode())) { const next=convert(n.nodeValue); if(next!==n.nodeValue) n.nodeValue=next; }
+  root.querySelectorAll?.('[title],[aria-label],[placeholder],[alt]').forEach(el=>{
+   for(const a of ['title','aria-label','placeholder','alt']){
+    const v=el.getAttribute(a); if(v) el.setAttribute(a,convert(v));
+   }
+  });
+ };
+ const run=()=>apply(document.body);
+ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',run,{once:true}); else run();
+ new MutationObserver(ms=>ms.forEach(m=>{
+  m.addedNodes.forEach(n=>{if(n.nodeType===Node.TEXT_NODE)n.nodeValue=convert(n.nodeValue);else if(n.nodeType===Node.ELEMENT_NODE)apply(n);});
+  if(m.type==='characterData'){const next=convert(m.target.nodeValue);if(next!==m.target.nodeValue)m.target.nodeValue=next;}
+ })).observe(document.documentElement,{subtree:true,childList:true,characterData:true});
+})();
+</script>
+<script src="./assets/product-features.js?v=9" defer></script>
+</body></html>
