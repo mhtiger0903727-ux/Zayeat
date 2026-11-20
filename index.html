@@ -972,7 +972,7 @@ function addRequestItemRow(name='',quantity=''){
  row.querySelector('.request-remove').addEventListener('click',()=>{if($('requestItems').children.length>1)row.remove();else row.querySelectorAll('input').forEach(x=>x.value=x.classList.contains('request-item-count')?'1':'');updateRequestEstimate();});
  $('requestItems').appendChild(row);updateRequestEstimate();
 }
-$('returningCustomerForm').addEventListener('submit',e=>{e.preventDefault();const phone=$('returningCustomerPhone').value.trim().replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))).replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));if(!/^\\+?[0-9\\s()-]{8,30}$/.test(phone)){alert('شماره موبایل معتبر وارد کنید.');return;}sessionStorage.setItem('zayeat_last_phone',phone);$('requestPhone').value=phone;showPage('request');});
+$('returningCustomerForm').addEventListener('submit',e=>{e.preventDefault();const phone=$('returningCustomerPhone').value.trim().replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))).replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));if(!/^\+?[0-9\s()-]{8,30}$/.test(phone)){alert('شماره موبایل معتبر وارد کنید.');return;}sessionStorage.setItem('zayeat_last_phone',phone);$('requestPhone').value=phone;showPage('request');});
 let requestFormInitialized=false;
 function initRequestForm(){
  if(!requestFormInitialized){$('addRequestItem').addEventListener('click',()=>addRequestItemRow());$('customerRequestForm').addEventListener('submit',submitCustomerRequest);requestFormInitialized=true;}
