@@ -504,7 +504,7 @@ window.setLayout=(which,n)=>{const el=$(which==='home'?'homeFiles':'productList'
  const day=value('weekday'),minutes=Number(value('hour'))*60+Number(value('minute'));
  const workingDay=['Sat','Sun','Mon','Tue','Wed'].includes(day);
  const open=workingDay&&minutes>=480&&minutes<810;
- status.textContent=open?'● باز هستیم':'● خارج از ساعت کاری';
+ status.textContent=open?'● در خدمتیم':'● خارج از ساعت کاری';
  status.className='work-hours-status '+(open?'open':'closed');
  if(day==='Thu')note.textContent='امروز پنجشنبه و تعطیل است · به وقت ایران';
  else if(day==='Fri')note.textContent='امروز جمعه و تعطیل است · به وقت ایران';
