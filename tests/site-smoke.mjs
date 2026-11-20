@@ -3,7 +3,7 @@ import { chromium } from 'playwright';
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
 const errors = [];
-page.on('pageerror', error => errors.push(error.message));
+page.on('pageerror', error => errors.push(error.stack || error.message));
 page.on('framenavigated', frame => { if (frame === page.mainFrame()) console.log('NAVIGATED:', frame.url()); });
 page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
 
@@ -21,7 +21,8 @@ try {
   for (const id of ['products', 'request', 'register', 'contact', 'panelLogin']) {
     await page.locator('#zayeatDock button[data-page="' + id + '"]').click();
     await page.waitForTimeout(1000);
-    if (!await page.locator('#' + id).evaluate(el => el.classList.contains('active'))) {
+    const expected = id === 'request' ? 'customerAccess' : id;
+    if (!await page.locator('#' + expected).evaluate(el => el.classList.contains('active'))) {
       throw new Error('Navigation failed for page: ' + id + '; active=' + await page.locator('.page.active').evaluate(el => el.id).catch(() => 'none') + '; showPage=' + await page.evaluate(() => typeof window.showPage) + '; errors=' + errors.join(' | '));
     }
   }
