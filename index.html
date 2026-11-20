@@ -837,7 +837,7 @@ async function selectCustomerLocation(lat,lng,accuracy=null){
   if(!response.ok)throw new Error('reverse lookup failed');
   const result=await response.json();const label=result.display_name||'';
   $('locationLabel').value=label;if(label)$('address').value=label;
-  $('locationStatus').textContent=label?'نشانی نقطه انتخاب‌شده در کادر آدرس قرار گرفت.':'مختصات ثبت شد: '+Number(lat).toFixed(5)+', '+Number(lng).toFixed(5);
+  $('locationStatus').textContent=(label?'نشانی نقطه انتخاب‌شده در کادر آدرس قرار گرفت.':'مختصات ثبت شد: '+Number(lat).toFixed(5)+', '+Number(lng).toFixed(5))+(Number.isFinite(accuracy)?' — دقت GPS حدود '+Math.round(accuracy)+' متر'+(accuracy>100?'؛ لطفاً نقطه را دستی بررسی کنید.':''):'');
  }catch(e){$('locationLabel').value='';$('locationStatus').textContent='مختصات ثبت شد: '+Number(lat).toFixed(5)+', '+Number(lng).toFixed(5)+' (نشانی قابل دریافت نبود)';}
 }
 function lookupAddressOnMap(){
@@ -873,7 +873,18 @@ $('useCurrentLocation').addEventListener('click',()=>{
  if(addressLookupController)addressLookupController.abort();addressLookupVersion++;if(addressLookupTimer)clearTimeout(addressLookupTimer);
  if(!navigator.geolocation){$('locationStatus').textContent='مرورگر شما از موقعیت‌یابی پشتیبانی نمی‌کند.';return;}
  $('locationStatus').textContent='در انتظار اجازه دسترسی به موقعیت مکانی...';
- navigator.geolocation.getCurrentPosition(pos=>{const {latitude,longitude,accuracy}=pos.coords;initRegistrationMap();registrationMap.setView([latitude,longitude],17);selectCustomerLocation(latitude,longitude,accuracy);},err=>{$('locationStatus').textContent=err.code===1?'اجازه دسترسی به موقعیت داده نشد. می‌توانید نقطه را دستی روی نقشه انتخاب کنید.':err.code===3?'دریافت GPS بیش از حد طول کشید؛ فضای باز را امتحان کنید یا نقطه را دستی انتخاب کنید.':'دریافت موقعیت ممکن نشد؛ نقطه را دستی روی نقشه انتخاب کنید.';},{enableHighAccuracy:true,timeout:30000,maximumAge:0});
+ // Collect several fresh fixes; the first result can be a coarse network location.
+ let best=null, finished=false, watch=null;
+ const button=$('useCurrentLocation');button.disabled=true;
+ const finish=()=>{if(finished)return;finished=true;if(watch!==null)navigator.geolocation.clearWatch(watch);clearTimeout(timer);button.disabled=false;if(!best)$('locationStatus').textContent='موقعیت دقیق دریافت نشد. GPS دقیق گوشی را فعال کنید یا نقطه را دستی روی نقشه مشخص کنید.';};
+ const timer=setTimeout(finish,25000);
+ watch=navigator.geolocation.watchPosition(pos=>{
+  if(finished)return;
+  const {latitude,longitude,accuracy}=pos.coords;
+  if(!Number.isFinite(latitude)||!Number.isFinite(longitude)||!Number.isFinite(accuracy))return;
+  if(!best||accuracy<best.coords.accuracy){best=pos;initRegistrationMap();registrationMap.setView([latitude,longitude],accuracy<=50?18:16);selectCustomerLocation(latitude,longitude,accuracy);$('locationStatus').textContent='در حال بهبود دقت GPS: حدود '+Math.round(accuracy)+' متر. برای اصلاح، نشانگر را روی نقشه جابه‌جا کنید.';}
+  if(accuracy<=25)finish();
+ },err=>{if(!best)$('locationStatus').textContent=err.code===1?'اجازه دسترسی به موقعیت دقیق داده نشد. دسترسی دقیق را فعال کنید.':'دریافت GPS ممکن نشد؛ نقطه را دستی انتخاب کنید.';finish();},{enableHighAccuracy:true,timeout:20000,maximumAge:0});
 });
 $('clearCustomerLocation').addEventListener('click',()=>{if(addressLookupController)addressLookupController.abort();addressLookupVersion++;if(addressLookupTimer)clearTimeout(addressLookupTimer);clearRegistrationMarker();$('locationStatus').textContent='موقعیت انتخاب‌شده پاک شد.';});
 $('customerForm').addEventListener('submit',async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;message('regMsg','در حال ثبت اطلاعات...');try{const payload={first_name:$('firstName').value.trim(),last_name:$('lastName').value.trim(),phone:$('phone').value.trim(),address:$('address').value.trim()};const lat=$('locationLatitude').value?Number($('locationLatitude').value):null;const lng=$('locationLongitude').value?Number($('locationLongitude').value):null;if((lat===null)!==(lng===null))throw new Error('انتخاب موقعیت کامل نیست؛ دوباره موقعیت را انتخاب کنید.');if(lat!==null){const inCoverage=await checkServiceCoverage(lat,lng);const coverageEl=$('coverageStatus');if(coverageEl&&inCoverage===false){coverageEl.textContent='⚠ خارج از مرز اداری بابل؛ اگر این نقطه در امتدادهای جاده‌ای مصوب شماست، ثبت ادامه می‌یابد و نیازمند بررسی مدیر است.';coverageEl.classList.add('coverage-outside');}else if(coverageEl&&inCoverage===null){coverageEl.textContent='مرز اداری بارگذاری نشد؛ موقعیت ثبت می‌شود اما باید توسط مدیر بررسی شود.';}}const email=$('customerEmail').value.trim().toLowerCase();const password=$('customerPassword').value;setCustomerRemember($('customerRemember').checked);const {data:authData,error:authError}=await customerAuth.auth.signUp({email,password});if(authError)throw authError;if(!authData.session)throw new Error('حساب ساخته شد؛ برای تکمیل ثبت‌نام ابتدا ایمیل را تأیید کنید و وارد شوید.');const {data,error}=await customerAuth.rpc('register_customer_with_welcome_email',{p_first_name:payload.first_name,p_last_name:payload.last_name,p_phone:payload.phone,p_email:$('customerEmail').value.trim().toLowerCase(),p_address:payload.address,p_location_latitude:lat,p_location_longitude:lng,p_location_label:$('locationLabel').value||null});if(error)throw error;message('regMsg','ثبت‌نام انجام شد. شماره پرونده شما: '+data+' — پیام خوش‌آمدگویی برای ارسال به ایمیل ثبت شد.');$('registerRequestNext').classList.remove('hidden');$('requestPhone').value=payload.phone;sessionStorage.setItem('zayeat_last_file_no',String(data));sessionStorage.setItem('zayeat_last_phone',payload.phone);e.target.reset();$('clearCustomerLocation').click();showPage('request');}catch(x){message('regMsg',errText(x),true);}finally{b.disabled=false;}});
@@ -1463,10 +1474,15 @@ $('driverStartDuty').addEventListener('click',async()=>{
  if(driverWatch!==null)return;
  const {error}=await sb.rpc('driver_set_duty',{p_on_duty:true});
  if(error){$('driverDutyStatus').textContent=errText(error);return;}
+ let lastDriverLocationAt=0;
  driverWatch=navigator.geolocation.watchPosition(async p=>{
-  const {error}=await sb.rpc('driver_update_location',{p_latitude:p.coords.latitude,p_longitude:p.coords.longitude,p_accuracy_m:p.coords.accuracy});
-  $('driverDutyStatus').textContent=error?errText(error):'موقعیت ارسال شد: '+new Date().toLocaleTimeString('fa-IR');
- },async e=>{$('driverDutyStatus').textContent=e.message;await stopDriverWatch();},{enableHighAccuracy:true,maximumAge:10000});
+  const accuracy=p.coords.accuracy;
+  if(!Number.isFinite(accuracy)||accuracy>100){$('driverDutyStatus').textContent='دقت GPS پایین است ('+Math.round(accuracy||0)+' متر). موقعیت نامطمئن ارسال نشد.';return;}
+  if(Date.now()-lastDriverLocationAt<4000)return;
+  lastDriverLocationAt=Date.now();
+  const {error}=await sb.rpc('driver_update_location',{p_latitude:p.coords.latitude,p_longitude:p.coords.longitude,p_accuracy_m:accuracy});
+  $('driverDutyStatus').textContent=error?errText(error):'موقعیت ارسال شد؛ دقت حدود '+Math.round(accuracy)+' متر — '+new Date().toLocaleTimeString('fa-IR');
+ },async e=>{$('driverDutyStatus').textContent=e.message;await stopDriverWatch();},{enableHighAccuracy:true,maximumAge:0,timeout:20000});
 });
 $('driverStopDuty').addEventListener('click',stopDriverWatch);
 async function refreshDriverMap(){
