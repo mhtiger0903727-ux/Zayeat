@@ -989,9 +989,9 @@ async function submitCustomerRequest(e){
  try{
  const items=[...$('requestItems').querySelectorAll('.request-item-row')].map(row=>{const raw=row.querySelector('.request-item-quantity').value;return {name:row.querySelector('.request-item-name').value.trim(),count:Number(row.querySelector('.request-item-count').value),quantity:raw===''?null:Number(raw),product_id:row.querySelector('.request-product-select').value||null,unit:'کیلوگرم'};});
  if(!items.length||items.some(x=>!x.name||!Number.isInteger(x.count)||x.count<1||x.quantity!==null&&(!Number.isFinite(x.quantity)||x.quantity<=0)))throw new Error('نام و تعداد هر قلم را وارد کنید؛ وزن تقریبی اختیاری است.');
- const {data,error}=await sb.rpc('submit_customer_request',{p_phone:$('requestPhone').value.trim(),p_items:items,p_notes:$('requestNotes').value.trim()||null});
+ const {data,error}=await customerAuth.rpc('submit_customer_request',{p_phone:$('requestPhone').value.trim(),p_items:items,p_notes:$('requestNotes').value.trim()||null});
  if(error)throw error;
- message('requestMsg','درخواست با موفقیت ثبت شد. کد پیگیری: '+data);$('trackingCode').value=String(data);if($('pickupDate').value&&$('pickupSlot').value){const pref=await sb.rpc('set_request_preference',{p_request_id:data,p_phone:$('requestPhone').value.trim(),p_date:$('pickupDate').value,p_slot:$('pickupSlot').value});if(pref.error)message('requestMsg','درخواست ثبت شد، ولی ذخیره زمان دلخواه ناموفق بود. کد پیگیری: '+data);}
+ message('requestMsg','درخواست با موفقیت ثبت شد. کد پیگیری: '+data);$('trackingCode').value=String(data);if($('pickupDate').value&&$('pickupSlot').value){const pref=await customerAuth.rpc('set_request_preference',{p_request_id:data,p_phone:$('requestPhone').value.trim(),p_date:$('pickupDate').value,p_slot:$('pickupSlot').value});if(pref.error)message('requestMsg','درخواست ثبت شد، ولی ذخیره زمان دلخواه ناموفق بود. کد پیگیری: '+data);}
  $('requestItems').innerHTML='';addRequestItemRow();$('requestNotes').value='';
  }catch(x){message('requestMsg',errText(x),true);}finally{b.disabled=false;}
 }
