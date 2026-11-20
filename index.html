@@ -804,11 +804,20 @@ function initRegistrationMap(){
  registrationMap=L.map('customerLocationMap').setView([36.55,52.68],10);
  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(registrationMap);
  serviceBoundaryPromise.then(g=>{if(!g||!registrationMap||serviceBoundaryLayer)return;serviceBoundaryLayer=L.geoJSON(g,{style:{color:'#16813b',weight:3,opacity:.9,fillColor:'#4caf50',fillOpacity:.07}}).addTo(registrationMap);registrationMap.fitBounds(serviceBoundaryLayer.getBounds(),{padding:[12,12]});});
- registrationMap.on('click',e=>{if(addressLookupController)addressLookupController.abort();addressLookupVersion++;if(addressLookupTimer)clearTimeout(addressLookupTimer);selectCustomerLocation(e.latlng.lat,e.latlng.lng);});
+ registrationMap.on('click',e=>{registrationLocationManuallyAdjusted=true;if(registrationGpsStop)registrationGpsStop();if(addressLookupController)addressLookupController.abort();addressLookupVersion++;if(addressLookupTimer)clearTimeout(addressLookupTimer);selectCustomerLocation(e.latlng.lat,e.latlng.lng);});
+}
+let registrationLocationManuallyAdjusted=false;
+let registrationGpsStop=null;
+function makeRegistrationMarker(lat,lng){
+ if(!registrationMap)return;
+ if(!registrationMarker){
+  registrationMarker=L.marker([lat,lng],{draggable:true,autoPan:true}).addTo(registrationMap);
+  registrationMarker.on('dragend',()=>{registrationLocationManuallyAdjusted=true;if(registrationGpsStop)registrationGpsStop();const p=registrationMarker.getLatLng();selectCustomerLocation(p.lat,p.lng);});
+ }else registrationMarker.setLatLng([lat,lng]);
 }
 function setRegistrationMarker(lat,lng,zoom=14){
  if(!registrationMap)return;
- if(registrationMarker)registrationMarker.setLatLng([lat,lng]);else registrationMarker=L.marker([lat,lng]).addTo(registrationMap);
+ makeRegistrationMarker(lat,lng);
  registrationMap.setView([lat,lng],zoom);
 }
 function clearRegistrationMarker(){
@@ -827,7 +836,7 @@ function setCustomerVoiceRoute(lat,lng){
 async function selectCustomerLocation(lat,lng,accuracy=null){
  $('locationLatitude').value=Number(lat).toFixed(7);$('locationLongitude').value=Number(lng).toFixed(7);
  setCustomerVoiceRoute(lat,lng);
- if(registrationMap){if(registrationMarker)registrationMarker.setLatLng([lat,lng]);else registrationMarker=L.marker([lat,lng]).addTo(registrationMap);}
+ if(registrationMap){makeRegistrationMarker(lat,lng);}
  const coverage=await checkServiceCoverage(lat,lng);
  const coverageEl=$('coverageStatus');
  if(coverageEl){coverageEl.textContent=coverage===true?'✓ این نقطه داخل محدوده خدماتی بابل و امتدادهای جاده‌ای مصوب است.':coverage===false?'⚠ این نقطه بیرون مرز اداری بابل است؛ ممکن است در امتداد جاده‌ایِ مجاز شما باشد و نیاز به بررسی دارد.':'مرز اداری در دسترس نیست؛ محدوده نیاز به بررسی دارد.';coverageEl.classList.toggle('coverage-outside',coverage===false);}
@@ -845,7 +854,7 @@ function lookupAddressOnMap(){
  if(addressLookupTimer)clearTimeout(addressLookupTimer);
  if(addressLookupController)addressLookupController.abort();
  const version=++addressLookupVersion;
- clearRegistrationMarker();
+ registrationLocationManuallyAdjusted=true;if(registrationGpsStop)registrationGpsStop();clearRegistrationMarker();
  if(query.length<5){$('locationStatus').textContent='برای نمایش خودکار موقعیت، آدرس را کامل‌تر وارد کنید.';return;}
  $('locationStatus').textContent='در حال پیدا کردن موقعیت تقریبی آدرس روی نقشه...';
  addressLookupTimer=setTimeout(async()=>{
@@ -875,18 +884,18 @@ $('useCurrentLocation').addEventListener('click',()=>{
  $('locationStatus').textContent='در انتظار اجازه دسترسی به موقعیت مکانی...';
  // Collect several fresh fixes; the first result can be a coarse network location.
  let best=null, finished=false, watch=null;
- const button=$('useCurrentLocation');button.disabled=true;
- const finish=()=>{if(finished)return;finished=true;if(watch!==null)navigator.geolocation.clearWatch(watch);clearTimeout(timer);button.disabled=false;if(!best)$('locationStatus').textContent='موقعیت دقیق دریافت نشد. GPS دقیق گوشی را فعال کنید یا نقطه را دستی روی نقشه مشخص کنید.';};
- const timer=setTimeout(finish,25000);
+ registrationLocationManuallyAdjusted=false;const button=$('useCurrentLocation');button.disabled=true;
+ const finish=()=>{if(finished)return;finished=true;registrationGpsStop=null;if(watch!==null)navigator.geolocation.clearWatch(watch);clearTimeout(timer);button.disabled=false;if(!best)$('locationStatus').textContent='موقعیت دقیق دریافت نشد. GPS دقیق گوشی را فعال کنید یا نقطه را دستی روی نقشه مشخص کنید.';};
+ registrationGpsStop=finish;const timer=setTimeout(finish,25000);
  watch=navigator.geolocation.watchPosition(pos=>{
-  if(finished)return;
+  if(finished||registrationLocationManuallyAdjusted)return;
   const {latitude,longitude,accuracy}=pos.coords;
   if(!Number.isFinite(latitude)||!Number.isFinite(longitude)||!Number.isFinite(accuracy))return;
   if(!best||accuracy<best.coords.accuracy){best=pos;initRegistrationMap();registrationMap.setView([latitude,longitude],accuracy<=50?18:16);selectCustomerLocation(latitude,longitude,accuracy);$('locationStatus').textContent='در حال بهبود دقت GPS: حدود '+Math.round(accuracy)+' متر. برای اصلاح، نشانگر را روی نقشه جابه‌جا کنید.';}
   if(accuracy<=25)finish();
  },err=>{if(!best)$('locationStatus').textContent=err.code===1?'اجازه دسترسی به موقعیت دقیق داده نشد. دسترسی دقیق را فعال کنید.':'دریافت GPS ممکن نشد؛ نقطه را دستی انتخاب کنید.';finish();},{enableHighAccuracy:true,timeout:20000,maximumAge:0});
 });
-$('clearCustomerLocation').addEventListener('click',()=>{if(addressLookupController)addressLookupController.abort();addressLookupVersion++;if(addressLookupTimer)clearTimeout(addressLookupTimer);clearRegistrationMarker();$('locationStatus').textContent='موقعیت انتخاب‌شده پاک شد.';});
+$('clearCustomerLocation').addEventListener('click',()=>{if(addressLookupController)addressLookupController.abort();addressLookupVersion++;if(addressLookupTimer)clearTimeout(addressLookupTimer);registrationLocationManuallyAdjusted=true;if(registrationGpsStop)registrationGpsStop();clearRegistrationMarker();$('locationStatus').textContent='موقعیت انتخاب‌شده پاک شد.';});
 $('customerForm').addEventListener('submit',async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;message('regMsg','در حال ثبت اطلاعات...');try{const payload={first_name:$('firstName').value.trim(),last_name:$('lastName').value.trim(),phone:$('phone').value.trim(),address:$('address').value.trim()};const lat=$('locationLatitude').value?Number($('locationLatitude').value):null;const lng=$('locationLongitude').value?Number($('locationLongitude').value):null;if((lat===null)!==(lng===null))throw new Error('انتخاب موقعیت کامل نیست؛ دوباره موقعیت را انتخاب کنید.');if(lat!==null){const inCoverage=await checkServiceCoverage(lat,lng);const coverageEl=$('coverageStatus');if(coverageEl&&inCoverage===false){coverageEl.textContent='⚠ خارج از مرز اداری بابل؛ اگر این نقطه در امتدادهای جاده‌ای مصوب شماست، ثبت ادامه می‌یابد و نیازمند بررسی مدیر است.';coverageEl.classList.add('coverage-outside');}else if(coverageEl&&inCoverage===null){coverageEl.textContent='مرز اداری بارگذاری نشد؛ موقعیت ثبت می‌شود اما باید توسط مدیر بررسی شود.';}}const email=$('customerEmail').value.trim().toLowerCase();const password=$('customerPassword').value;setCustomerRemember($('customerRemember').checked);const {data:authData,error:authError}=await customerAuth.auth.signUp({email,password});if(authError)throw authError;if(!authData.session)throw new Error('حساب ساخته شد؛ برای تکمیل ثبت‌نام ابتدا ایمیل را تأیید کنید و وارد شوید.');const {data,error}=await customerAuth.rpc('register_customer_with_welcome_email',{p_first_name:payload.first_name,p_last_name:payload.last_name,p_phone:payload.phone,p_email:$('customerEmail').value.trim().toLowerCase(),p_address:payload.address,p_location_latitude:lat,p_location_longitude:lng,p_location_label:$('locationLabel').value||null});if(error)throw error;message('regMsg','ثبت‌نام انجام شد. شماره پرونده شما: '+data+' — پیام خوش‌آمدگویی برای ارسال به ایمیل ثبت شد.');$('registerRequestNext').classList.remove('hidden');$('requestPhone').value=payload.phone;sessionStorage.setItem('zayeat_last_file_no',String(data));sessionStorage.setItem('zayeat_last_phone',payload.phone);e.target.reset();$('clearCustomerLocation').click();showPage('request');}catch(x){message('regMsg',errText(x),true);}finally{b.disabled=false;}});
 $('loginForm').addEventListener('submit',async e=>{
  e.preventDefault();const b=e.submitter;b.disabled=true;message('loginMsg','در حال ورود...');
