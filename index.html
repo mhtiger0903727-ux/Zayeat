@@ -1680,11 +1680,11 @@ async function loadAdminExtras(){
    const parts=dayFmt.formatToParts(date);
    const read=k=>parts.find(p=>p.type===k)?.value||'';
    const fileNo=read('year')+read('month')+read('day');
-   if(!/^\\d{8}$/.test(fileNo))return;
+   if(!/^\d{8}$/.test(fileNo))return;
    if(!archiveDays.has(fileNo))archiveDays.set(fileNo,[]);
    archiveDays.get(fileNo).push(entry);
   });
-  const faNo=n=>String(n).replace(/\\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[Number(d)]);
+  const faNo=n=>String(n).replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[Number(d)]);
   archiveEl.innerHTML=[...archiveDays.entries()].sort((a,b)=>b[0].localeCompare(a[0])).map(([fileNo,entries])=>{
    const inKg=entries.filter(e=>e.kind==='in').reduce((s,e)=>s+Number(e.weight_kg||0),0);
    const outKg=entries.filter(e=>e.kind==='out').reduce((s,e)=>s+Number(e.weight_kg||0),0);
