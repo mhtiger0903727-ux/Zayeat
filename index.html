@@ -1284,8 +1284,21 @@ async function openAdminDossier(admin){
   (admin.avatar_url?'<p style="text-align:center"><img src="'+esc(admin.avatar_url)+'" alt="" style="width:84px;height:84px;border-radius:50%;object-fit:cover"></p>':'')+
   '<p>نام کاربری: <b>'+esc(admin.username)+'</b></p><p>ایمیل: '+esc(admin.email||'ثبت نشده')+'</p><p>تاریخ عضویت: '+esc(new Date(admin.created_at).toLocaleDateString('fa-IR'))+'</p>'+
   (admin.bio?'<p>بیوگرافی: '+esc(admin.bio)+'</p>':'')+
+  '<hr class="divider"><h4>تعیین رمز جدید مدیر دوم</h4><p class="muted small">رمز فعلی قابل مشاهده نیست. رمز جدید حداقل ۱۰ نویسه باشد.</p><form id="resetSecondManagerPasswordForm" class="form"><input id="secondManagerNewPassword" type="password" autocomplete="new-password" minlength="10" maxlength="128" placeholder="رمز جدید مدیر دوم" required><input id="secondManagerConfirmPassword" type="password" autocomplete="new-password" minlength="10" maxlength="128" placeholder="تکرار رمز جدید" required><button type="submit" class="btn-green">تغییر رمز مدیر دوم</button></form><p id="resetSecondManagerPasswordMsg" class="msg" aria-live="polite"></p>'+ 
   '<hr class="divider"><h4>دسترسی به بخش‌های پنل</h4><p class="muted">هر بخش را جداگانه فعال یا غیرفعال کنید. پروفایل شخصی و خروج همیشه در دسترس می‌مانند.</p><div id="adminPermissionOptions">'+Object.entries(adminPermissionLabels).map(([key,label])=>'<label style="display:flex;align-items:center;gap:8px;margin:8px 0"><input type="checkbox" data-admin-permission="'+key+'" '+(adminPermissionEnabled(permissions,key)?'checked':'')+'>'+label+'</label>').join('')+'</div>'+
   '<div class="row-btns"><button type="button" class="btn-green" id="saveAdminPermissions">ذخیره دسترسی‌ها</button><button type="button" class="btn-red" id="deleteAdminAccount">حذف مدیر</button></div><p id="adminDossierMsg" class="msg" aria-live="polite"></p>';
+ $('resetSecondManagerPasswordForm').addEventListener('submit',async e=>{
+  e.preventDefault();const btn=e.submitter;const pw=$('secondManagerNewPassword').value;
+  if(pw!==$('secondManagerConfirmPassword').value){message('resetSecondManagerPasswordMsg','تکرار رمز یکسان نیست.',true);return;}
+  if(!confirm('رمز عبور مدیر دوم تغییر کند؟'))return;
+  btn.disabled=true;message('resetSecondManagerPasswordMsg','در حال تغییر رمز...');
+  try{
+   const {data:{session},error:sessionError}=await sb.auth.getSession();if(sessionError||!session)throw new Error('برای تغییر رمز دوباره وارد حساب مدیر اصلی شوید.');
+   const response=await fetch(SUPABASE_URL+'/functions/v1/owner-reset-manager-password',{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+session.access_token},body:JSON.stringify({user_id:admin.user_id,password:pw})});
+   const result=await response.json();if(!response.ok)throw new Error(result.message||'خطا در تغییر رمز');
+   message('resetSecondManagerPasswordMsg',result.message||'رمز تغییر کرد.');e.target.reset();
+  }catch(err){message('resetSecondManagerPasswordMsg',errText(err),true);}finally{btn.disabled=false;}
+ });
  $('saveAdminPermissions').onclick=async()=>{
   const button=$('saveAdminPermissions');button.disabled=true;
   const next={};box.querySelectorAll('[data-admin-permission]').forEach(input=>next[input.dataset.adminPermission]=input.checked);
